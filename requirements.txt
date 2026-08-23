@@ -1,11 +1,12 @@
 fastapi>=0.110.0
 uvicorn[standard]>=0.28.0
 python-multipart>=0.0.9
-paddleocr>=2.7.0,<3.0.0
-paddlepaddle>=2.5.0,<=2.6.2
+paddleocr>=2.7.0
+paddlepaddle>=2.5.0
+opencv-python-headless>=4.8.0
 reportlab>=4.1.0
 pydantic>=2.6.0
 pillow>=10.0.0
-numpy>=1.24.0
+numpy>=1.24.0,<2.0.0
 supabase>=2.30.0
 python-dotenv>=1.0.0
