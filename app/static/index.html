@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legal Metrology Compliance-Assist Engine | SIH PS-26034</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Navigation / Official Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="gov-emblem">⚖️</div>
+        <div>
+          <h1 class="brand-title">Legal Metrology Compliance-Assist Engine</h1>
+          <p class="brand-subtitle">Pre-Inspection Screening System &bull; Ministry of Consumer Affairs, Food & Public Distribution</p>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="/" class="nav-link active">🔍 Label Scanner</a>
+        <a href="/dashboard" class="nav-link">📊 Analytics Dashboard</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Mandatory Statutory Notice Banner -->
+  <div class="disclaimer-banner">
+    <div class="container disclaimer-content">
+      <span class="disclaimer-icon">ℹ️</span>
+      <span class="disclaimer-text">
+        <strong>Statutory Notice:</strong> This is a compliance-assist screening report, not a statutory notice under the Legal Metrology Act, 2009. Official enforcement or seizure is strictly reserved for designated Legal Metrology Officers under Section 15.
+      </span>
+    </div>
+  </div>
+
+  <main class="container main-content">
+
+    <!-- Upload & Input Card -->
+    <section class="card upload-card">
+      <div class="card-header">
+        <h2 class="card-title">1. Upload Product Label Image</h2>
+        <p class="card-desc">Upload a clear photo or scan of a packaged commodity label (PNG or JPEG).</p>
+      </div>
+
+      <div class="upload-dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept="image/png, image/jpeg, image/jpg, image/webp" class="file-input-hidden">
+        <div class="dropzone-inner" id="dropzonePrompt">
+          <div class="upload-icon">📁</div>
+          <p class="upload-prompt-text"><strong>Click to browse</strong> or drag and drop label photo here</p>
+          <p class="upload-hint">Supports PNG, JPG, JPEG (Max 15MB)</p>
+        </div>
+
+        <div class="preview-container hidden" id="previewContainer">
+          <img id="imagePreview" alt="Label Preview" class="image-preview">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnChangeImage">Change Image</button>
+        </div>
+      </div>
+
+      <!-- Quick Demo Presets for Testing -->
+      <div class="presets-section">
+        <span class="preset-label">Quick Test Presets:</span>
+        <div class="preset-buttons">
+          <button type="button" class="btn-chip" data-preset="compliant">✅ Standard Compliant Pack</button>
+          <button type="button" class="btn-chip" data-preset="nutrition_panel">🥗 Nutrition Panel (Not Exempt)</button>
+          <button type="button" class="btn-chip" data-preset="non_std_unit">⚠️ Non-Standard Unit ("gm")</button>
+          <button type="button" class="btn-chip" data-preset="dual_mrp">⚠️ Dual MRP Anomaly</button>
+          <button type="button" class="btn-chip" data-preset="missing_fields">❌ Missing Consumer Care</button>
+          <button type="button" class="btn-chip" data-preset="exempt_bulk">ℹ️ Exempt (30 kg Pack)</button>
+          <button type="button" class="btn-chip" data-preset="exempt_small">ℹ️ Small Non-Tobacco (5g)</button>
+          <button type="button" class="btn-chip" data-preset="tobacco_small">🚭 Small Tobacco (5g - Non-Exempt)</button>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button type="button" class="btn btn-primary btn-large" id="btnAnalyze" disabled>
+          <span id="btnAnalyzeText">🔍 Check Compliance</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Active Scanning Progress Container (Shows during scan processing) -->
+    <div class="card scanning-progress-card hidden" id="scanningProgressCard">
+      <div class="scanning-progress-body">
+        <div class="scan-spinner-large"></div>
+        <div class="scanning-text-block">
+          <h3 class="scanning-title">Scanning & Evaluating Label...</h3>
+          <p class="scanning-desc" id="scanningProgressStatus">Running PaddleOCR text extraction and evaluating statutory Legal Metrology rules...</p>
+          <div class="scan-progress-bar-track">
+            <div class="scan-progress-bar-indeterminate"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Section -->
+    <section class="card results-card hidden" id="resultsSection">
+      <div class="results-header">
+        <div>
+          <h2 class="card-title">2. Screening Results</h2>
+          <p class="card-desc" id="scanMetaText">Scan ID: LM-XXXXXX &bull; Evaluated on: --</p>
+        </div>
+        <div class="results-actions">
+          <button type="button" class="btn btn-export" id="btnExportPdf">
+            📄 Download PDF Report
+          </button>
+        </div>
+      </div>
+
+      <!-- Compliance Summary Bar (Positioned above the status banner) -->
+      <div class="compliance-summary-bar" id="complianceSummaryBar">
+        <div class="summary-bar-header">
+          <span class="summary-bar-title" id="summaryBarTitle">Compliance Score: 5 of 5 Mandatory Declarations Passed</span>
+          <span class="summary-bar-pct" id="summaryBarPct">100%</span>
+        </div>
+        <div class="summary-track">
+          <div class="summary-fill" id="summaryFill" style="width: 100%;"></div>
+        </div>
+        <p class="summary-hint" id="summaryHint">All mandatory declarations meet Rule 6 specifications.</p>
+      </div>
+
+      <!-- Overall Status Banner -->
+      <div class="status-banner" id="statusBanner">
+        <div class="status-icon" id="statusIcon">✓</div>
+        <div class="status-info">
+          <h3 class="status-title" id="statusTitle">COMPLIANT</h3>
+          <p class="status-desc" id="statusDesc">All 5 mandatory declarations meet Legal Metrology (Packaged Commodities) Rules, 2011 requirements.</p>
+        </div>
+      </div>
+
+      <!-- Exemption Alert Block (Shown only if exempt) -->
+      <div class="exemption-box hidden" id="exemptionBox">
+        <div class="exemption-box-header">
+          <span class="exemption-icon">🛡️</span>
+          <h4>Statutory Exemption Applicable</h4>
+        </div>
+        <p id="exemptionReasonText">Package is exempt from retail packaged commodity declaration rules.</p>
+        <p class="exemption-ref" id="exemptionRefText">Reference: Rule 3 / Rule 26, Legal Metrology (Packaged Commodities) Rules, 2011.</p>
+      </div>
+
+      <!-- 5 Mandatory Fields Results Grid -->
+      <div id="fieldsContainer" class="fields-grid">
+        <!-- Field Cards generated dynamically by app.js -->
+      </div>
+
+      <!-- OCR Extracted Text Accordion -->
+      <div class="ocr-accordion">
+        <button type="button" class="accordion-toggle" id="btnToggleOcr">
+          <span>📜 View Extracted OCR Text Lines (<span id="ocrLineCount">0</span> detected)</span>
+          <span class="accordion-arrow" id="accordionArrow">▼</span>
+        </button>
+        <div class="accordion-content hidden" id="ocrContent">
+          <pre id="rawOcrText" class="ocr-code-block"></pre>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-content">
+      <p>Legal Metrology Compliance-Assist Engine &bull; Developed for Smart India Hackathon PS-26034</p>
+      <p class="footer-disclaimer">Pre-inspection screening tool only. Does not constitute statutory notice or legal adjudication under Legal Metrology Act, 2009.</p>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

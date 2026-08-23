@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics Dashboard — Legal Metrology Compliance-Assist Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <!-- Chart.js for analytics visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Official Ministry Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="gov-emblem">⚖️</div>
+        <div>
+          <h1 class="brand-title">Legal Metrology Compliance-Assist Engine</h1>
+          <p class="brand-subtitle">Ministry of Consumer Affairs, Food & Public Distribution &bull; Pre-Inspection Screening Portal</p>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">🔍 Label Scanner</a>
+        <a href="/dashboard" class="nav-link active">📊 Analytics Dashboard</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Statutory Disclaimer Notice -->
+  <div class="disclaimer-banner">
+    <div class="container disclaimer-content">
+      <span class="alert-icon">ℹ️</span>
+      <p class="disclaimer-text">
+        <strong>Statutory Notice:</strong> This dashboard displays automated pre-inspection compliance screening records. It does not constitute a statutory enforcement log or notice under Section 15 of the Legal Metrology Act, 2009.
+      </p>
+    </div>
+  </div>
+
+  <main class="container main-content">
+    
+    <!-- Dashboard Header -->
+    <div class="dashboard-header-row">
+      <div>
+        <h2 class="section-title">📊 Packaged Commodity Compliance Analytics</h2>
+        <p class="section-subtitle">Real-time aggregate data and historical screening logs from automated label inspections.</p>
+      </div>
+      <div class="dashboard-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="btnRefresh">
+          <span id="refreshIcon">🔄</span> Refresh Data
+        </button>
+        <a href="/" class="btn btn-primary btn-sm">➕ New Label Scan</a>
+      </div>
+    </div>
+
+    <!-- Summary Metrics 4-Card Grid -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-icon metric-total-icon">📋</div>
+        <div class="metric-body">
+          <span class="metric-label">Total Labels Screened</span>
+          <span class="metric-value" id="metricTotal">0</span>
+          <span class="metric-hint">Cumulative scan count</span>
+        </div>
+      </div>
+
+      <div class="metric-card metric-compliant">
+        <div class="metric-icon metric-compliant-icon">✅</div>
+        <div class="metric-body">
+          <span class="metric-label">Compliant Packages</span>
+          <span class="metric-value" id="metricCompliant">0</span>
+          <span class="metric-hint" id="metricCompliantPct">0% compliance rate</span>
+        </div>
+      </div>
+
+      <div class="metric-card metric-non-compliant">
+        <div class="metric-icon metric-non-compliant-icon">⚠️</div>
+        <div class="metric-body">
+          <span class="metric-label">Non-Compliant / Flagged</span>
+          <span class="metric-value" id="metricNonCompliant">0</span>
+          <span class="metric-hint">Missing mandatory fields or anomalies</span>
+        </div>
+      </div>
+
+      <div class="metric-card metric-exempt">
+        <div class="metric-icon metric-exempt-icon">🛡️</div>
+        <div class="metric-body">
+          <span class="metric-label">Statutory Exemptions</span>
+          <span class="metric-value" id="metricExempt">0</span>
+          <span class="metric-hint">Rule 3 / Rule 26 exemptions</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="card-header-clean">
+          <h3 class="card-title-sm">Compliance Breakdown</h3>
+          <span class="badge-subtle">Overall Distribution</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="breakdownChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="card-header-clean">
+          <h3 class="card-title-sm">Screening Outcomes Breakdown</h3>
+          <span class="badge-subtle">Volume Comparison</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="volumeBarChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Scans Table Section -->
+    <div class="card table-card">
+      <div class="table-header-row">
+        <div>
+          <h3 class="card-title">Recent Inspection Records</h3>
+          <p class="card-desc">Last 20 packaged commodity screening logs recorded in Supabase.</p>
+        </div>
+        <span class="badge badge-subtle" id="tableRecordCount">Showing 0 records</span>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state hidden" id="emptyState">
+        <div class="empty-icon">📭</div>
+        <h4 class="empty-title">No Scans Recorded Yet</h4>
+        <p class="empty-desc">Upload and evaluate product label images on the scanner page to view screening logs and analytics here.</p>
+        <a href="/" class="btn btn-primary btn-sm">Scan a Product Label Now</a>
+      </div>
+
+      <!-- Scans Table -->
+      <div class="table-responsive" id="tableContainer">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Timestamp (IST)</th>
+              <th>Scan Reference ID</th>
+              <th>Filename</th>
+              <th>Status</th>
+              <th>Mandatory Fields</th>
+              <th>Summary Finding</th>
+            </tr>
+          </thead>
+          <tbody id="scansTableBody">
+            <!-- Rows injected by dashboard.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-content">
+      <p>Legal Metrology (Packaged Commodities) Rules, 2011 &bull; Smart India Hackathon PS-26034</p>
+      <p class="footer-note">Designed for pre-inspection screening assistance &bull; Ministry of Consumer Affairs, Food & Public Distribution</p>
+    </div>
+  </footer>
+
+  <script src="/static/dashboard.js"></script>
+</body>
+</html>
