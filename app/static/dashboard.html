@@ -178,9 +178,26 @@
       <div class="table-header-row">
         <div>
           <h3 class="card-title">Recent Inspection Records</h3>
-          <p class="card-desc">Most recent packaged commodity screening logs recorded in Supabase.</p>
+          <p class="card-desc">Most recent packaged commodity screening logs recorded in Supabase cloud database.</p>
         </div>
         <span class="badge-subtle" id="tableRecordCount">Showing 0 records</span>
+      </div>
+
+      <!-- Live Search and Filter Bar -->
+      <div class="table-filter-bar">
+        <div class="search-input-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="scanSearchInput" placeholder="Search by Filename, Scan ID, Finding...">
+        </div>
+        <div class="filter-pills">
+          <button type="button" class="filter-pill active" data-filter="all">All Records</button>
+          <button type="button" class="filter-pill" data-filter="compliant">Compliant (Pass)</button>
+          <button type="button" class="filter-pill" data-filter="non-compliant">Flagged / Non-Compliant</button>
+          <button type="button" class="filter-pill" data-filter="exempt">Exempt</button>
+        </div>
       </div>
 
       <!-- Empty State -->
@@ -224,6 +241,8 @@
       <p class="footer-disclaimer">Designed for pre-inspection screening assistance &bull; Ministry of Consumer Affairs, Food & Public Distribution</p>
     </div>
   </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
 
   <script src="/static/dashboard.js"></script>
 </body>

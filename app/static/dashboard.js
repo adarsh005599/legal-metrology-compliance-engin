@@ -1,26 +1,29 @@
-// Legal Metrology Compliance-Assist Engine Dashboard Logic — "Calibration Instrument" Edition
+// Legal Metrology Compliance-Assist Engine Dashboard Logic — "Liquid Glass & Calibration" Edition
 
 let breakdownChartInstance = null;
 let volumeBarChartInstance = null;
+let allFetchedScans = [];
+let activeFilter = 'all';
+let searchQuery = '';
 
-// Exact Color Palette Constants
 const PALETTE = {
-  inkNavy: '#16233B',
-  canvasBg: '#F6F7F5',
-  cardBg: '#FFFFFF',
-  brass: '#A97D3F',
-  pass: '#1E7145',
-  fail: '#B23A34',
-  exempt: '#3D5A80',
-  uncertain: '#A97D3F',
-  border: '#D8DBD4',
-  textPrimary: '#1B2430',
-  textSecondary: '#5C6472'
+  inkNavy: '#101D33',
+  brass: '#B4833E',
+  pass: '#059669',
+  fail: '#DC2626',
+  warning: '#D97706',
+  exempt: '#2563EB',
+  uncertain: '#B4833E',
+  textPrimary: '#111827',
+  textSecondary: '#4B5563',
+  border: '#E5E7EB'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
   const btnRefresh = document.getElementById('btnRefresh');
   const refreshIconSvg = document.getElementById('refreshIconSvg');
+  const scanSearchInput = document.getElementById('scanSearchInput');
+  const filterPills = document.querySelectorAll('.filter-pill');
 
   loadDashboardData();
 
@@ -28,13 +31,31 @@ document.addEventListener('DOMContentLoaded', () => {
     btnRefresh.addEventListener('click', async () => {
       if (refreshIconSvg) refreshIconSvg.classList.add('rotating');
       btnRefresh.disabled = true;
+      showToast('Refreshing live telemetry...', 'info');
       await loadDashboardData();
       setTimeout(() => {
         if (refreshIconSvg) refreshIconSvg.classList.remove('rotating');
         btnRefresh.disabled = false;
-      }, 400);
+        showToast('Dashboard telemetry synchronized', 'success');
+      }, 450);
     });
   }
+
+  if (scanSearchInput) {
+    scanSearchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.toLowerCase().trim();
+      applyFiltersAndRender();
+    });
+  }
+
+  filterPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      filterPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      activeFilter = pill.getAttribute('data-filter') || 'all';
+      applyFiltersAndRender();
+    });
+  });
 });
 
 
@@ -50,19 +71,20 @@ async function loadDashboardData() {
       summary = await summaryRes.json();
     }
 
-    let recentScans = [];
     if (recentRes && recentRes.ok) {
-      recentScans = await recentRes.json();
+      allFetchedScans = await recentRes.json();
+    } else {
+      allFetchedScans = [];
     }
 
     updateMetricCards(summary);
     renderCharts(summary);
-    renderRecentTable(recentScans);
+    applyFiltersAndRender();
 
   } catch (err) {
     console.error('Error loading dashboard data:', err);
     updateMetricCards({ total: 0, compliant: 0, non_compliant: 0, exempt: 0, uncertain: 0 });
-    renderRecentTable([]);
+    applyFiltersAndRender();
   }
 }
 
@@ -103,7 +125,7 @@ function renderCharts(summary) {
   const exempt = summary.exempt || 0;
   const uncertain = summary.uncertain || 0;
 
-  // 1. Doughnut Breakdown Chart (Strict Palette)
+  // 1. Doughnut Breakdown Chart
   const breakdownCtx = document.getElementById('breakdownChart');
   if (breakdownCtx) {
     if (breakdownChartInstance) {
@@ -112,11 +134,11 @@ function renderCharts(summary) {
 
     const dataValues = total > 0 ? [compliant, nonCompliant, exempt, uncertain] : [1, 0, 0, 0];
     const dataLabels = total > 0 
-      ? ['Compliant (Pass)', 'Non-Compliant (Fail)', 'Statutory Exempt', 'Uncertain (Low OCR)']
-      : ['No Inspection Data', '', '', ''];
-    const bgColors = total > 0
-      ? [PALETTE.pass, PALETTE.fail, PALETTE.exempt, PALETTE.uncertain]
-      : ['#E6E8E3', '#E6E8E3', '#E6E8E3', '#E6E8E3'];
+      ? ['Compliant (Pass)', 'Non-Compliant (Flagged)', 'Statutory Exempt', 'Uncertain (Low OCR)']
+      : ['No Inspection Data Recorded', '', '', ''];
+    const bgColors = total > 0 
+      ? [PALETTE.pass, PALETTE.fail, PALETTE.exempt, PALETTE.warning]
+      : ['#E5E7EB', '#E5E7EB', '#E5E7EB', '#E5E7EB'];
 
     breakdownChartInstance = new Chart(breakdownCtx, {
       type: 'doughnut',
@@ -125,9 +147,9 @@ function renderCharts(summary) {
         datasets: [{
           data: dataValues,
           backgroundColor: bgColors,
-          borderWidth: 2,
+          borderWidth: 3,
           borderColor: '#FFFFFF',
-          hoverOffset: 3
+          hoverOffset: 4
         }]
       },
       options: {
@@ -146,7 +168,7 @@ function renderCharts(summary) {
           tooltip: {
             callbacks: {
               label: (context) => {
-                if (total === 0) return 'No scan data recorded';
+                if (total === 0) return ' No scan data recorded';
                 const label = context.label || '';
                 const val = context.parsed || 0;
                 const pct = total > 0 ? Math.round((val / total) * 100) : 0;
@@ -160,7 +182,7 @@ function renderCharts(summary) {
     });
   }
 
-  // 2. Bar Chart (Strict Palette & Plex Mono labels)
+  // 2. Bar Chart
   const barCtx = document.getElementById('volumeBarChart');
   if (barCtx) {
     if (volumeBarChartInstance) {
@@ -174,9 +196,9 @@ function renderCharts(summary) {
         datasets: [{
           label: 'Scan Volume',
           data: [compliant, nonCompliant, exempt, uncertain],
-          backgroundColor: [PALETTE.pass, PALETTE.fail, PALETTE.exempt, PALETTE.uncertain],
-          borderRadius: 2,
-          maxBarThickness: 40
+          backgroundColor: [PALETTE.pass, PALETTE.fail, PALETTE.exempt, PALETTE.warning],
+          borderRadius: 4,
+          maxBarThickness: 44
         }]
       },
       options: {
@@ -198,7 +220,7 @@ function renderCharts(summary) {
               font: { family: "'IBM Plex Mono', monospace", size: 11 },
               color: PALETTE.textSecondary
             },
-            grid: { color: '#ECEEEA' }
+            grid: { color: 'rgba(229, 231, 235, 0.7)' }
           },
           x: {
             ticks: { 
@@ -211,6 +233,35 @@ function renderCharts(summary) {
       }
     });
   }
+}
+
+
+function applyFiltersAndRender() {
+  let filtered = [...allFetchedScans];
+
+  // 1. Status Filter
+  if (activeFilter === 'compliant') {
+    filtered = filtered.filter(s => (s.status || '').toLowerCase() === 'compliant');
+  } else if (activeFilter === 'non-compliant') {
+    filtered = filtered.filter(s => {
+      const st = (s.status || '').toLowerCase();
+      return st === 'non-compliant' || st === 'fail' || st === 'warning' || st === 'uncertain';
+    });
+  } else if (activeFilter === 'exempt') {
+    filtered = filtered.filter(s => (s.status || '').toLowerCase() === 'exempt');
+  }
+
+  // 2. Search Query Filter
+  if (searchQuery) {
+    filtered = filtered.filter(s => {
+      const fn = (s.filename || '').toLowerCase();
+      const ref = (s.scan_ref_id || '').toLowerCase();
+      const status = (s.status || '').toLowerCase();
+      return fn.includes(searchQuery) || ref.includes(searchQuery) || status.includes(searchQuery);
+    });
+  }
+
+  renderRecentTable(filtered);
 }
 
 
@@ -233,12 +284,11 @@ function renderRecentTable(scans) {
 
   if (tableContainer) tableContainer.classList.remove('hidden');
   if (emptyState) emptyState.classList.add('hidden');
-  if (recordCountEl) recordCountEl.textContent = `Showing ${scans.length} recent record${scans.length === 1 ? '' : 's'}`;
+  if (recordCountEl) recordCountEl.textContent = `Showing ${scans.length} of ${allFetchedScans.length} record${allFetchedScans.length === 1 ? '' : 's'}`;
 
   scans.forEach(scan => {
     const tr = document.createElement('tr');
 
-    // Format timestamp (IBM Plex Mono)
     let timeStr = scan.timestamp || '';
     if (timeStr) {
       try {
@@ -257,27 +307,25 @@ function renderRecentTable(scans) {
       }
     }
 
-    // Stamped seal tag styling for table
     const rawStatus = (scan.status || 'unknown').toLowerCase();
     let tagClass = 'tag-pass';
-    let tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    let tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
     let statusText = 'COMPLIANT';
 
     if (rawStatus === 'non-compliant' || rawStatus === 'fail') {
       tagClass = 'tag-fail';
-      tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
       statusText = 'NON-COMPLIANT';
     } else if (rawStatus === 'exempt') {
       tagClass = 'tag-exempt';
-      tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+      tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
       statusText = 'EXEMPT';
     } else if (rawStatus === 'uncertain') {
       tagClass = 'tag-uncertain';
-      tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+      tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
       statusText = 'UNCERTAIN';
     }
 
-    // Fields passed display in Plex Mono
     let fieldsDisplay = `${scan.fields_passed || 0}/${scan.fields_total || 5}`;
     if (rawStatus === 'exempt') {
       fieldsDisplay = '<span style="color: var(--color-text-muted);">N/A (Exempt)</span>';
@@ -287,7 +335,6 @@ function renderRecentTable(scans) {
       fieldsDisplay = `<span class="text-fail font-semibold">${fieldsDisplay}</span>`;
     }
 
-    // Summary Finding Text in Plex Sans
     let findingSummary = 'All 5 mandatory declarations verified';
     if (rawStatus === 'exempt') {
       findingSummary = 'Statutory exemption applied (Rule 3 / 26)';
@@ -295,7 +342,7 @@ function renderRecentTable(scans) {
       findingSummary = 'Low OCR confidence region detected (<60%)';
     } else if (rawStatus === 'non-compliant') {
       const results = scan.field_results || [];
-      const failed = results.filter(f => f.status === 'FAIL' || f.status === 'WARNING').map(f => f.field_name);
+      const failed = results.filter(f => f.status === 'FAIL' || f.status === 'WARNING' || f.status === 'FLAGGED').map(f => f.field_name);
       if (failed.length > 0) {
         findingSummary = `Flagged: ${failed.join(', ')}`;
       } else {
@@ -306,7 +353,7 @@ function renderRecentTable(scans) {
     tr.innerHTML = `
       <td class="cell-time">${escapeHtml(timeStr)}</td>
       <td><code class="ref-code">${escapeHtml(scan.scan_ref_id || 'N/A')}</code></td>
-      <td class="cell-filename">${escapeHtml(scan.filename || 'uploaded_image.png')}</td>
+      <td class="cell-filename" title="${escapeHtml(scan.filename || '')}">${escapeHtml(scan.filename || 'uploaded_image.png')}</td>
       <td><span class="stamp-tag ${tagClass}">${tagIcon} ${statusText}</span></td>
       <td class="cell-fields">${fieldsDisplay}</td>
       <td class="cell-summary">${escapeHtml(findingSummary)}</td>
@@ -314,6 +361,34 @@ function renderRecentTable(scans) {
 
     tableBody.appendChild(tr);
   });
+}
+
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+
+  const iconMap = {
+    success: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+    warning: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    error: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    info: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+  };
+
+  toast.innerHTML = `
+    <div class="toast-icon-box">${iconMap[type] || iconMap.info}</div>
+    <div class="toast-message">${escapeHtml(message)}</div>
+  `;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('toast-out');
+    setTimeout(() => toast.remove(), 250);
+  }, 3500);
 }
 
 

@@ -1,4 +1,4 @@
-// Legal Metrology Compliance-Assist Engine Frontend Logic — "Calibration Instrument" Edition
+// Legal Metrology Compliance-Assist Engine Frontend Logic — "Liquid Glass & Calibration" Edition
 
 document.addEventListener('DOMContentLoaded', () => {
   // Elements
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let mediaStream = null;
   let currentFacingMode = 'environment';
 
-  // SVG Line Icons (1.75px stroke, uniform clean style)
+  // SVG Line Icons
   const ICONS = {
     check: '<svg class="status-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
     cross: '<svg class="status-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     stampUncertain: '<svg class="stamp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
   };
 
-  // Preset definitions for fast testing
+  // Presets
   const PRESETS = {
     compliant: {
       title: "Standard Compliant Pack",
@@ -142,9 +142,10 @@ document.addEventListener('DOMContentLoaded', () => {
       };
       mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       cameraVideo.srcObject = mediaStream;
+      showToast('Live camera scanner ready', 'info');
     } catch (err) {
       console.error('Camera access error:', err);
-      alert(`Camera could not be accessed (${err.name}: ${err.message}). Please check camera permissions or upload an image file.`);
+      showToast('Camera access unavailable. Switching to file upload.', 'warning');
       btnModeUpload.click();
     }
   }
@@ -170,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnCapturePhoto.addEventListener('click', () => {
     if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) {
-      alert('Camera video stream is not ready yet. Please wait a moment.');
+      showToast('Camera video stream is not ready yet', 'warning');
       return;
     }
 
@@ -181,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cameraCanvas.toBlob((blob) => {
       if (!blob) {
-        alert('Failed to capture photo frame.');
+        showToast('Failed to capture snapshot', 'error');
         return;
       }
       const capturedFile = new File([blob], `camera_scan_${Date.now()}.png`, { type: 'image/png' });
@@ -192,6 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnModeCamera.classList.remove('active');
 
       handleFileSelection(capturedFile);
+      showToast('Photo captured from camera', 'success');
     }, 'image/png');
   });
 
@@ -199,13 +201,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // FILE UPLOAD WORKFLOW
   // ==============================================================================
 
-  // Click to open file dialog window
   dropzone.addEventListener('click', (e) => {
     if (e.target.closest('#btnChangeImage')) return;
     fileInput.click();
   });
 
-  // Drag and drop handlers
   ['dragenter', 'dragover'].forEach(eventName => {
     dropzone.addEventListener(eventName, (e) => {
       e.preventDefault();
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleFileSelection(file) {
     if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file (PNG, JPG, JPEG, WEBP).');
+      showToast('Please upload a valid image file (PNG, JPG, JPEG, WEBP)', 'warning');
       return;
     }
     currentFile = file;
@@ -266,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
       dropzonePrompt.classList.add('hidden');
       previewContainer.classList.remove('hidden');
       btnAnalyze.disabled = false;
+      showToast(`Selected: ${file.name}`, 'info');
     };
     reader.readAsDataURL(file);
   }
@@ -295,9 +296,9 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.lineWidth = 2;
       ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
 
-      ctx.fillStyle = "#16233B";
+      ctx.fillStyle = "#101D33";
       ctx.font = "bold 15px 'IBM Plex Sans', sans-serif";
-      ctx.fillText(`[PRESET DEMO LABEL] ${preset.title}`, 26, 38);
+      ctx.fillText(`[DEMO PRESET] ${preset.title}`, 26, 38);
 
       ctx.font = "13px 'IBM Plex Mono', monospace";
       ctx.fillStyle = "#1B2430";
@@ -310,6 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
       dropzonePrompt.classList.add('hidden');
       previewContainer.classList.remove('hidden');
       btnAnalyze.disabled = false;
+      showToast(`Loaded preset: ${preset.title}`, 'info');
     });
   });
 
@@ -354,9 +356,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       currentReport = data;
       renderResults(data);
+
+      if (data.is_exempt) {
+        showToast('Statutory Exemption Applied (Rule 3/26)', 'info');
+      } else if (data.overall_status === 'COMPLIANT') {
+        showToast('Screening Passed: 100% Compliant', 'success');
+      } else if (data.overall_status === 'NON_COMPLIANT') {
+        const hasDual = (data.fields || []).some(f => (f.flag || '').includes('Dual pricing'));
+        if (hasDual) {
+          showToast('Dual pricing anomaly detected (Rule 32)', 'warning');
+        } else {
+          showToast('Screening Flagged: Review Rule 6 findings', 'warning');
+        }
+      }
     } catch (err) {
       console.error('Scan error:', err);
-      alert(`Error scanning label: ${err.message}`);
+      showToast(`Error scanning label: ${err.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -553,6 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnExportPdf.disabled = true;
     const originalText = btnExportPdf.innerHTML;
     btnExportPdf.innerHTML = '<span>Generating PDF Report...</span>';
+    showToast('Generating formal compliance screening PDF...', 'info');
 
     try {
       const response = await fetch('/api/export', {
@@ -574,14 +590,42 @@ document.addEventListener('DOMContentLoaded', () => {
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
+      showToast('Compliance report PDF downloaded successfully', 'success');
     } catch (err) {
       console.error('PDF export error:', err);
-      alert(`Could not export PDF report: ${err.message}`);
+      showToast(`Could not export PDF report: ${err.message}`, 'error');
     } finally {
       btnExportPdf.disabled = false;
       btnExportPdf.innerHTML = originalText;
     }
   });
+
+  function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    const iconMap = {
+      success: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+      warning: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+      error: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+      info: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+    };
+
+    toast.innerHTML = `
+      <div class="toast-icon-box">${iconMap[type] || iconMap.info}</div>
+      <div class="toast-message">${escapeHtml(message)}</div>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('toast-out');
+      setTimeout(() => toast.remove(), 250);
+    }, 3500);
+  }
 
   function escapeHtml(str) {
     if (!str) return '';
