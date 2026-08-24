@@ -90,11 +90,13 @@ body {
 }
 
 /* Header & Official Navigation */
+.instrument-header,
 .app-header {
   background-color: var(--color-ink-navy);
   color: #FFFFFF;
   border-bottom: 2px solid var(--color-brass);
-  padding: 1.15rem 0;
+  padding: 1rem 0;
+  width: 100%;
 }
 
 .header-container {
@@ -107,6 +109,7 @@ body {
   gap: 1.5rem;
 }
 
+.header-brand,
 .brand {
   display: flex;
   align-items: center;
@@ -115,15 +118,46 @@ body {
   color: inherit;
 }
 
-.gov-emblem-svg {
-  width: 38px;
-  height: 38px;
-  color: var(--color-brass);
-  border: 1px solid rgba(169, 125, 63, 0.4);
-  padding: 6px;
+.brand-insignia {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(169, 125, 63, 0.45);
   border-radius: 4px;
-  background: rgba(22, 35, 59, 0.6);
+  background: rgba(22, 35, 59, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  padding: 6px;
+}
+
+.insignia-svg,
+.gov-emblem-svg {
+  width: 28px;
+  height: 28px;
+  max-width: 28px;
+  max-height: 28px;
+  color: var(--color-brass);
+  flex-shrink: 0;
+  display: block;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-dept,
+.brand-subtitle {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  color: #98A2B3;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-weight: 500;
 }
 
 .brand-title {
@@ -135,15 +169,8 @@ body {
   line-height: 1.25;
 }
 
-.brand-subtitle {
-  font-family: var(--font-ui);
-  font-size: 0.78rem;
-  color: #98A2B3;
-  letter-spacing: 0.01em;
-  margin-top: 2px;
-}
-
 /* Navigation Links */
+.header-nav,
 .nav-links {
   display: flex;
   align-items: center;
@@ -166,6 +193,10 @@ body {
 
 .nav-link svg {
   stroke-width: 1.75;
+  width: 15px;
+  height: 15px;
+  max-width: 15px;
+  max-height: 15px;
 }
 
 .nav-link:hover {
@@ -201,6 +232,8 @@ body {
 .disclaimer-icon-svg {
   width: 18px;
   height: 18px;
+  max-width: 18px;
+  max-height: 18px;
   color: var(--color-text-secondary);
   flex-shrink: 0;
   margin-top: 2px;
@@ -237,6 +270,22 @@ body {
 }
 
 .card-header {
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-ink-navy);
+  letter-spacing: -0.01em;
+}
+
+.card-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}
+
 .header-flex-row {
   display: flex;
   justify-content: space-between;
@@ -413,7 +462,11 @@ body {
 }
 
 .file-input-hidden {
-  display: none;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
 }
 
 .dropzone-inner {
@@ -426,8 +479,11 @@ body {
 .upload-icon-svg {
   width: 44px;
   height: 44px;
+  max-width: 44px;
+  max-height: 44px;
   color: var(--color-brass);
   stroke-width: 1.5;
+  flex-shrink: 0;
 }
 
 .upload-prompt-text {
