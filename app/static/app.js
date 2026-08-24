@@ -92,6 +92,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Click to open file dialog window
+  dropzone.addEventListener('click', (e) => {
+    if (e.target.closest('#btnChangeImage')) return;
+    fileInput.click();
+  });
+
   // Drag and drop handlers
   ['dragenter', 'dragover'].forEach(eventName => {
     dropzone.addEventListener(eventName, (e) => {
@@ -110,15 +116,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropzone.classList.remove('dragover');
     const dt = e.dataTransfer;
     const files = dt.files;
-    if (files.length > 0) {
+    if (files && files.length > 0) {
       handleFileSelection(files[0]);
     }
   });
 
   fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
+    if (e.target.files && e.target.files.length > 0) {
       handleFileSelection(e.target.files[0]);
     }
   });
@@ -132,6 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
     dropzonePrompt.classList.remove('hidden');
     btnAnalyze.disabled = true;
     clearActivePreset();
+    // Reopen file picker
+    fileInput.click();
   });
 
   function handleFileSelection(file) {
