@@ -1,4 +1,4 @@
-// Legal Metrology Compliance-Assist Engine Frontend Logic
+// Legal Metrology Compliance-Assist Engine Frontend Logic — "Calibration Instrument" Edition
 
 document.addEventListener('DOMContentLoaded', () => {
   // Elements
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const summaryHint = document.getElementById('summaryHint');
 
   const statusBanner = document.getElementById('statusBanner');
-  const statusIcon = document.getElementById('statusIcon');
+  const statusIconBox = document.getElementById('statusIconBox');
   const statusTitle = document.getElementById('statusTitle');
   const statusDesc = document.getElementById('statusDesc');
   const exemptionBox = document.getElementById('exemptionBox');
@@ -42,6 +42,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentFile = null;
   let currentPresetText = null;
   let currentReport = null;
+
+  // SVG Line Icons (1.75px stroke, uniform clean style)
+  const ICONS = {
+    check: '<svg class="status-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    cross: '<svg class="status-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    shield: '<svg class="status-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    warning: '<svg class="status-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    uncertain: '<svg class="status-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    stampCheck: '<svg class="stamp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    stampCross: '<svg class="stamp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    stampWarning: '<svg class="stamp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    stampUncertain: '<svg class="stamp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+  };
 
   // Preset definitions for fast hackathon demo testing
   const PRESETS = {
@@ -153,27 +166,27 @@ document.addEventListener('DOMContentLoaded', () => {
       currentFile = null;
       currentPresetText = preset.text;
 
-      // Generate a canvas dummy preview showing the label text
+      // Draw crisp instrument canvas preview
       const canvas = document.createElement('canvas');
-      canvas.width = 600;
+      canvas.width = 640;
       canvas.height = 340;
       const ctx = canvas.getContext('2d');
       
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = "#F6F7F5";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = "#cbd5e1";
-      ctx.lineWidth = 4;
-      ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+      ctx.strokeStyle = "#D8DBD4";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
 
-      ctx.fillStyle = "#1e293b";
-      ctx.font = "bold 16px Inter, sans-serif";
-      ctx.fillText(`[PRESET DEMO LABEL] ${preset.title}`, 24, 38);
+      ctx.fillStyle = "#16233B";
+      ctx.font = "bold 15px 'IBM Plex Sans', sans-serif";
+      ctx.fillText(`[PRESET DEMO LABEL] ${preset.title}`, 26, 38);
 
-      ctx.font = "14px 'JetBrains Mono', monospace";
-      ctx.fillStyle = "#334155";
+      ctx.font = "13px 'IBM Plex Mono', monospace";
+      ctx.fillStyle = "#1B2430";
       const lines = preset.text.split('\n');
       lines.forEach((l, idx) => {
-        ctx.fillText(l, 24, 75 + (idx * 26));
+        ctx.fillText(l, 26, 75 + (idx * 26));
       });
 
       imagePreview.src = canvas.toDataURL('image/png');
@@ -232,27 +245,30 @@ document.addEventListener('DOMContentLoaded', () => {
   function setLoading(isLoading) {
     if (isLoading) {
       btnAnalyze.disabled = true;
-      btnAnalyzeText.textContent = "Screening In Progress...";
+      btnAnalyzeText.textContent = "Calibrating & Screening...";
       if (scanningProgressCard) scanningProgressCard.classList.remove('hidden');
       if (resultsSection) resultsSection.classList.add('hidden');
     } else {
       btnAnalyze.disabled = false;
-      btnAnalyzeText.textContent = "🔍 Check Compliance";
+      btnAnalyzeText.textContent = "Check Compliance";
       if (scanningProgressCard) scanningProgressCard.classList.add('hidden');
     }
   }
 
   // Render screening results
   function renderResults(report) {
-    scanMetaText.innerHTML = `<strong>Scan Reference ID:</strong> ${report.scan_id} &bull; <strong>Evaluated on:</strong> ${report.timestamp}`;
+    scanMetaText.innerHTML = `<strong>Scan Ref ID:</strong> <span class="ref-code">${escapeHtml(report.scan_id)}</span> &bull; <strong>Evaluated on:</strong> ${escapeHtml(report.timestamp)}`;
     
-    // 1. Compliance Summary Progress Bar (Above status banner)
+    // 1. Compliance Summary Progress Bar (Signature Element 2: Ruler fill with single smooth needle transition)
     if (report.is_exempt) {
       if (summaryBarTitle) summaryBarTitle.textContent = "Statutory Exemption Applied (Rule 3 / Rule 26)";
       if (summaryBarPct) summaryBarPct.textContent = "EXEMPT";
       if (summaryFill) {
-        summaryFill.style.width = "100%";
         summaryFill.className = "summary-fill summary-fill-exempt";
+        summaryFill.style.width = "0%";
+        requestAnimationFrame(() => {
+          setTimeout(() => { summaryFill.style.width = "100%"; }, 50);
+        });
       }
       if (summaryHint) summaryHint.textContent = "Package meets statutory exemption criteria under Rule 3 / Rule 26. Standard retail declaration rules are waived.";
     } else {
@@ -262,10 +278,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const hasWarning = (report.fields || []).some(f => f.status === 'WARNING');
       const pct = Math.round((passedFields / totalFields) * 100);
 
-      if (summaryBarTitle) summaryBarTitle.textContent = `Compliance Score: ${passedFields} of ${totalFields} Mandatory Declarations Passed`;
+      if (summaryBarTitle) summaryBarTitle.textContent = `Compliance Score: ${passedFields} of ${totalFields} Mandatory Declarations Verified`;
       if (summaryBarPct) summaryBarPct.textContent = `${pct}%`;
       if (summaryFill) {
-        summaryFill.style.width = `${pct}%`;
+        summaryFill.style.width = "0%";
         if (passedFields === totalFields) {
           summaryFill.className = 'summary-fill';
         } else if (hasWarning || hasUncertain) {
@@ -273,46 +289,49 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           summaryFill.className = 'summary-fill summary-fill-danger';
         }
+        requestAnimationFrame(() => {
+          setTimeout(() => { summaryFill.style.width = `${pct}%`; }, 50);
+        });
       }
       if (summaryHint) {
         if (passedFields === totalFields) {
-          summaryHint.textContent = "All 5 mandatory declarations meet Legal Metrology (Packaged Commodities) Rules, 2011 specifications.";
+          summaryHint.textContent = "All 5 mandatory statutory declarations satisfy Legal Metrology (Packaged Commodities) Rules, 2011 specifications.";
         } else {
           summaryHint.textContent = `${totalFields - passedFields} mandatory declaration(s) are missing or non-compliant under Rule 6.`;
         }
       }
     }
 
-    // 2. Status Banner Styling
+    // 2. Primary Compliance Verdict Banner (Dominant visual hierarchy)
     statusBanner.className = 'status-banner';
     const overall = (report.overall_status || '').toUpperCase();
 
     if (overall === 'COMPLIANT') {
       statusBanner.classList.add('compliant');
-      statusIcon.textContent = '✓';
+      statusIconBox.innerHTML = ICONS.check;
       statusTitle.textContent = 'COMPLIANT';
       statusDesc.textContent = 'All 5 mandatory declarations meet Legal Metrology (Packaged Commodities) Rules, 2011 specifications.';
     } else if (overall === 'EXEMPT') {
       statusBanner.classList.add('exempt');
-      statusIcon.textContent = '🛡️';
-      statusTitle.textContent = 'EXEMPT FROM PACKAGED COMMODITY RULES';
+      statusIconBox.innerHTML = ICONS.shield;
+      statusTitle.textContent = 'STATUTORY EXEMPTION APPLIED';
       statusDesc.textContent = 'Package meets statutory exemption criteria under Rule 3 / Rule 26. Standard retail declaration rules are waived.';
     } else if (overall === 'UNCERTAIN') {
       statusBanner.classList.add('uncertain');
-      statusIcon.textContent = '⚠️';
+      statusIconBox.innerHTML = ICONS.uncertain;
       statusTitle.textContent = 'UNCERTAIN — LOW OCR CONFIDENCE';
-      statusDesc.textContent = 'One or more fields have low OCR confidence (< 60%). Manual pre-inspection review is recommended.';
+      statusDesc.textContent = 'One or more text fields returned low OCR confidence (< 60%). Physical pre-inspection review is recommended.';
     } else {
       statusBanner.classList.add('non_compliant');
-      statusIcon.textContent = '✕';
-      statusTitle.textContent = 'NON-COMPLIANT / ANOMALY FLAGGED';
+      statusIconBox.innerHTML = ICONS.cross;
+      statusTitle.textContent = 'NON-COMPLIANT / ANOMALY DETECTED';
       statusDesc.textContent = 'One or more mandatory declarations are missing, non-compliant, or have price/unit anomalies.';
     }
 
     // 3. Exemption box
     if (report.is_exempt && report.exemption_details) {
       exemptionBox.classList.remove('hidden');
-      exemptionReasonText.textContent = report.exemption_details.reason || 'Package meets exemption conditions.';
+      exemptionReasonText.textContent = report.exemption_details.reason || 'Package meets statutory exemption conditions.';
       exemptionRefText.textContent = `Reference: ${report.exemption_details.rule_reference || 'Rule 3 & Rule 26'}`;
       fieldsContainer.innerHTML = '';
     } else {
@@ -337,23 +356,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'field-card';
 
-      let statusBadgeClass = 'badge-pass';
+      let stampClass = 'stamp-pass';
       let statusCardClass = 'status-pass';
-      let icon = '✓';
+      let stampIconSvg = ICONS.stampCheck;
       const statusUpper = (field.status || '').toUpperCase();
 
       if (statusUpper === 'FAIL') {
-        statusBadgeClass = 'badge-fail';
+        stampClass = 'stamp-fail';
         statusCardClass = 'status-fail';
-        icon = '✕';
+        stampIconSvg = ICONS.stampCross;
       } else if (statusUpper === 'WARNING') {
-        statusBadgeClass = 'badge-warning';
+        stampClass = 'stamp-warning';
         statusCardClass = 'status-warning';
-        icon = '⚠️';
+        stampIconSvg = ICONS.stampWarning;
       } else if (statusUpper === 'UNCERTAIN') {
-        statusBadgeClass = 'badge-uncertain';
+        stampClass = 'stamp-uncertain';
         statusCardClass = 'status-uncertain';
-        icon = '⚠️';
+        stampIconSvg = ICONS.stampUncertain;
       }
 
       card.classList.add(statusCardClass);
@@ -366,22 +385,26 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const matchedHtml = field.matched_text 
-        ? `<div class="field-matched-text">${escapeHtml(field.matched_text)} ${confTagHtml}</div>` 
+        ? `<div class="field-matched-text"><code>${escapeHtml(field.matched_text)}</code> ${confTagHtml}</div>` 
         : `<div class="field-desc-text"><em>No matching declaration detected on label</em></div>`;
 
       const flagHtml = field.flag 
-        ? `<div class="field-flag-warning">⚠️ ${escapeHtml(field.flag)}</div>` 
+        ? `<div class="field-flag-warning">${ICONS.warning} ${escapeHtml(field.flag)}</div>` 
         : '';
 
       const detailsHtml = `<div class="field-desc-text">${escapeHtml(field.details)}</div>`;
 
+      // Official Stamped Seal Badge rendering
       card.innerHTML = `
         <div class="field-name-block">
           <span class="field-name">${escapeHtml(field.field_name)}</span>
           <span class="field-rule">${escapeHtml(field.rule_reference)}</span>
         </div>
-        <div>
-          <span class="badge ${statusBadgeClass}">${icon} ${statusUpper}</span>
+        <div class="badge-stamp-wrapper">
+          <div class="badge-stamp ${stampClass}">
+            ${stampIconSvg}
+            <span class="stamp-text">${statusUpper}</span>
+          </div>
         </div>
         <div class="field-details-block">
           ${matchedHtml}
@@ -405,8 +428,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!currentReport) return;
 
     btnExportPdf.disabled = true;
-    const originalText = btnExportPdf.textContent;
-    btnExportPdf.textContent = 'Generating PDF...';
+    const originalText = btnExportPdf.innerHTML;
+    btnAnalyzeText.textContent = 'Generating Calibration Report...';
 
     try {
       const response = await fetch('/api/export', {
@@ -433,13 +456,13 @@ document.addEventListener('DOMContentLoaded', () => {
       alert(`Could not export PDF report: ${err.message}`);
     } finally {
       btnExportPdf.disabled = false;
-      btnExportPdf.textContent = originalText;
+      btnExportPdf.innerHTML = originalText;
     }
   });
 
   function escapeHtml(str) {
     if (!str) return '';
-    return str
+    return String(str)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")

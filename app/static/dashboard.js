@@ -1,21 +1,36 @@
-// Legal Metrology Compliance-Assist Engine Dashboard Logic
+// Legal Metrology Compliance-Assist Engine Dashboard Logic — "Calibration Instrument" Edition
 
 let breakdownChartInstance = null;
 let volumeBarChartInstance = null;
 
+// Exact Color Palette Constants
+const PALETTE = {
+  inkNavy: '#16233B',
+  canvasBg: '#F6F7F5',
+  cardBg: '#FFFFFF',
+  brass: '#A97D3F',
+  pass: '#1E7145',
+  fail: '#B23A34',
+  exempt: '#3D5A80',
+  uncertain: '#A97D3F',
+  border: '#D8DBD4',
+  textPrimary: '#1B2430',
+  textSecondary: '#5C6472'
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   const btnRefresh = document.getElementById('btnRefresh');
-  const refreshIcon = document.getElementById('refreshIcon');
+  const refreshIconSvg = document.getElementById('refreshIconSvg');
 
   loadDashboardData();
 
   if (btnRefresh) {
     btnRefresh.addEventListener('click', async () => {
-      refreshIcon.classList.add('rotating');
+      if (refreshIconSvg) refreshIconSvg.classList.add('rotating');
       btnRefresh.disabled = true;
       await loadDashboardData();
       setTimeout(() => {
-        refreshIcon.classList.remove('rotating');
+        if (refreshIconSvg) refreshIconSvg.classList.remove('rotating');
         btnRefresh.disabled = false;
       }, 400);
     });
@@ -88,7 +103,7 @@ function renderCharts(summary) {
   const exempt = summary.exempt || 0;
   const uncertain = summary.uncertain || 0;
 
-  // 1. Doughnut Breakdown Chart
+  // 1. Doughnut Breakdown Chart (Strict Palette)
   const breakdownCtx = document.getElementById('breakdownChart');
   if (breakdownCtx) {
     if (breakdownChartInstance) {
@@ -98,10 +113,10 @@ function renderCharts(summary) {
     const dataValues = total > 0 ? [compliant, nonCompliant, exempt, uncertain] : [1, 0, 0, 0];
     const dataLabels = total > 0 
       ? ['Compliant (Pass)', 'Non-Compliant (Fail)', 'Statutory Exempt', 'Uncertain (Low OCR)']
-      : ['No Data Yet', '', '', ''];
+      : ['No Inspection Data', '', '', ''];
     const bgColors = total > 0
-      ? ['#16a34a', '#dc2626', '#2563eb', '#f59e0b']
-      : ['#e2e8f0', '#e2e8f0', '#e2e8f0', '#e2e8f0'];
+      ? [PALETTE.pass, PALETTE.fail, PALETTE.exempt, PALETTE.uncertain]
+      : ['#E6E8E3', '#E6E8E3', '#E6E8E3', '#E6E8E3'];
 
     breakdownChartInstance = new Chart(breakdownCtx, {
       type: 'doughnut',
@@ -111,8 +126,8 @@ function renderCharts(summary) {
           data: dataValues,
           backgroundColor: bgColors,
           borderWidth: 2,
-          borderColor: '#ffffff',
-          hoverOffset: 4
+          borderColor: '#FFFFFF',
+          hoverOffset: 3
         }]
       },
       options: {
@@ -123,8 +138,9 @@ function renderCharts(summary) {
             position: 'bottom',
             labels: {
               boxWidth: 12,
-              font: { family: 'Inter', size: 11 },
-              padding: 12
+              font: { family: "'IBM Plex Sans', sans-serif", size: 11 },
+              color: PALETTE.textSecondary,
+              padding: 14
             }
           },
           tooltip: {
@@ -139,12 +155,12 @@ function renderCharts(summary) {
             }
           }
         },
-        cutout: '65%'
+        cutout: '68%'
       }
     });
   }
 
-  // 2. Bar Chart
+  // 2. Bar Chart (Strict Palette & Plex Mono labels)
   const barCtx = document.getElementById('volumeBarChart');
   if (barCtx) {
     if (volumeBarChartInstance) {
@@ -158,9 +174,9 @@ function renderCharts(summary) {
         datasets: [{
           label: 'Scan Volume',
           data: [compliant, nonCompliant, exempt, uncertain],
-          backgroundColor: ['#22c55e', '#ef4444', '#3b82f6', '#f59e0b'],
-          borderRadius: 6,
-          maxBarThickness: 45
+          backgroundColor: [PALETTE.pass, PALETTE.fail, PALETTE.exempt, PALETTE.uncertain],
+          borderRadius: 2,
+          maxBarThickness: 40
         }]
       },
       options: {
@@ -170,7 +186,7 @@ function renderCharts(summary) {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (context) => ` Volume: ${context.parsed.y} labels`
+              label: (context) => ` Verified: ${context.parsed.y} labels`
             }
           }
         },
@@ -179,12 +195,16 @@ function renderCharts(summary) {
             beginAtZero: true,
             ticks: {
               precision: 0,
-              font: { family: 'Inter', size: 11 }
+              font: { family: "'IBM Plex Mono', monospace", size: 11 },
+              color: PALETTE.textSecondary
             },
-            grid: { color: '#f1f5f9' }
+            grid: { color: '#ECEEEA' }
           },
           x: {
-            ticks: { font: { family: 'Inter', size: 11, weight: '500' } },
+            ticks: { 
+              font: { family: "'IBM Plex Sans', sans-serif", size: 11, weight: '600' },
+              color: PALETTE.textPrimary
+            },
             grid: { display: false }
           }
         }
@@ -218,7 +238,7 @@ function renderRecentTable(scans) {
   scans.forEach(scan => {
     const tr = document.createElement('tr');
 
-    // Format timestamp
+    // Format timestamp (IBM Plex Mono)
     let timeStr = scan.timestamp || '';
     if (timeStr) {
       try {
@@ -237,37 +257,37 @@ function renderRecentTable(scans) {
       }
     }
 
-    // Status badge formatting
+    // Stamped seal tag styling for table
     const rawStatus = (scan.status || 'unknown').toLowerCase();
-    let badgeClass = 'badge-pass';
-    let badgeIcon = '✓';
+    let tagClass = 'tag-pass';
+    let tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
     let statusText = 'COMPLIANT';
 
     if (rawStatus === 'non-compliant' || rawStatus === 'fail') {
-      badgeClass = 'badge-fail';
-      badgeIcon = '✕';
+      tagClass = 'tag-fail';
+      tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
       statusText = 'NON-COMPLIANT';
     } else if (rawStatus === 'exempt') {
-      badgeClass = 'badge-exempt';
-      badgeIcon = '🛡️';
+      tagClass = 'tag-exempt';
+      tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
       statusText = 'EXEMPT';
     } else if (rawStatus === 'uncertain') {
-      badgeClass = 'badge-uncertain';
-      badgeIcon = '⚠️';
+      tagClass = 'tag-uncertain';
+      tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
       statusText = 'UNCERTAIN';
     }
 
-    // Fields passed display
+    // Fields passed display in Plex Mono
     let fieldsDisplay = `${scan.fields_passed || 0}/${scan.fields_total || 5}`;
     if (rawStatus === 'exempt') {
-      fieldsDisplay = '<span class="text-muted">N/A (Exempt)</span>';
+      fieldsDisplay = '<span style="color: var(--color-text-muted);">N/A (Exempt)</span>';
     } else if (scan.fields_passed === scan.fields_total && scan.fields_total > 0) {
-      fieldsDisplay = `<span class="text-success font-semibold">${fieldsDisplay} (100%)</span>`;
+      fieldsDisplay = `<span class="text-pass font-semibold">${fieldsDisplay} (100%)</span>`;
     } else {
-      fieldsDisplay = `<span class="text-danger font-semibold">${fieldsDisplay}</span>`;
+      fieldsDisplay = `<span class="text-fail font-semibold">${fieldsDisplay}</span>`;
     }
 
-    // Summary Finding Text
+    // Summary Finding Text in Plex Sans
     let findingSummary = 'All 5 mandatory declarations verified';
     if (rawStatus === 'exempt') {
       findingSummary = 'Statutory exemption applied (Rule 3 / 26)';
@@ -285,10 +305,10 @@ function renderRecentTable(scans) {
 
     tr.innerHTML = `
       <td class="cell-time">${escapeHtml(timeStr)}</td>
-      <td class="cell-ref"><code class="ref-code">${escapeHtml(scan.scan_ref_id || 'N/A')}</code></td>
+      <td><code class="ref-code">${escapeHtml(scan.scan_ref_id || 'N/A')}</code></td>
       <td class="cell-filename">${escapeHtml(scan.filename || 'uploaded_image.png')}</td>
-      <td><span class="badge ${badgeClass}">${badgeIcon} ${statusText}</span></td>
-      <td>${fieldsDisplay}</td>
+      <td><span class="stamp-tag ${tagClass}">${tagIcon} ${statusText}</span></td>
+      <td class="cell-fields">${fieldsDisplay}</td>
       <td class="cell-summary">${escapeHtml(findingSummary)}</td>
     `;
 

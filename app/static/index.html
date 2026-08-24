@@ -7,23 +7,43 @@
   <link rel="stylesheet" href="/static/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <!-- Top Navigation / Official Header -->
   <header class="app-header">
     <div class="header-container">
-      <div class="brand">
-        <div class="gov-emblem">⚖️</div>
+      <a href="/" class="brand">
+        <!-- Clean Line-Style Scales of Justice SVG Emblem -->
+        <svg class="gov-emblem-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v18"/>
+          <path d="M6 7l6-2 6 2"/>
+          <path d="M6 7l-3 7h6l-3-7z"/>
+          <path d="M18 7l-3 7h6l-3-7z"/>
+          <path d="M4 21h16"/>
+        </svg>
         <div>
           <h1 class="brand-title">Legal Metrology Compliance-Assist Engine</h1>
           <p class="brand-subtitle">Pre-Inspection Screening System &bull; Ministry of Consumer Affairs, Food & Public Distribution</p>
         </div>
-      </div>
+      </a>
       <nav class="nav-links">
-        <a href="/" class="nav-link active">🔍 Label Scanner</a>
-        <a href="/dashboard" class="nav-link">📊 Analytics Dashboard</a>
+        <a href="/" class="nav-link active">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Label Scanner
+        </a>
+        <a href="/dashboard" class="nav-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="9" y1="21" x2="9" y2="9"/>
+          </svg>
+          Analytics Dashboard
+        </a>
       </nav>
     </div>
   </header>
@@ -31,7 +51,11 @@
   <!-- Mandatory Statutory Notice Banner -->
   <div class="disclaimer-banner">
     <div class="container disclaimer-content">
-      <span class="disclaimer-icon">ℹ️</span>
+      <svg class="disclaimer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
       <span class="disclaimer-text">
         <strong>Statutory Notice:</strong> This is a compliance-assist screening report, not a statutory notice under the Legal Metrology Act, 2009. Official enforcement or seizure is strictly reserved for designated Legal Metrology Officers under Section 15.
       </span>
@@ -50,7 +74,11 @@
       <div class="upload-dropzone" id="dropzone">
         <input type="file" id="fileInput" accept="image/png, image/jpeg, image/jpg, image/webp" class="file-input-hidden">
         <div class="dropzone-inner" id="dropzonePrompt">
-          <div class="upload-icon">📁</div>
+          <svg class="upload-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
           <p class="upload-prompt-text"><strong>Click to browse</strong> or drag and drop label photo here</p>
           <p class="upload-hint">Supports PNG, JPG, JPEG (Max 15MB)</p>
         </div>
@@ -65,23 +93,26 @@
       <div class="presets-section">
         <span class="preset-label">Quick Test Presets:</span>
         <div class="preset-buttons">
-          <button type="button" class="btn-chip" data-preset="compliant">✅ Standard Compliant Pack</button>
-          <button type="button" class="btn-chip" data-preset="nutrition_panel">🥗 Nutrition Panel (Not Exempt)</button>
-          <button type="button" class="btn-chip" data-preset="non_std_unit">⚠️ Non-Standard Unit ("gm")</button>
-          <button type="button" class="btn-chip" data-preset="dual_mrp">⚠️ Dual MRP Anomaly</button>
-          <button type="button" class="btn-chip" data-preset="missing_fields">❌ Missing Consumer Care</button>
-          <button type="button" class="btn-chip" data-preset="exempt_bulk">ℹ️ Exempt (30 kg Pack)</button>
-          <button type="button" class="btn-chip" data-preset="exempt_small">ℹ️ Small Non-Tobacco (5g)</button>
-          <button type="button" class="btn-chip" data-preset="tobacco_small">🚭 Small Tobacco (5g - Non-Exempt)</button>
+          <button type="button" class="btn-chip" data-preset="compliant">Standard Compliant Pack</button>
+          <button type="button" class="btn-chip" data-preset="nutrition_panel">Nutrition Panel (Not Exempt)</button>
+          <button type="button" class="btn-chip" data-preset="non_std_unit">Non-Standard Unit ("gm")</button>
+          <button type="button" class="btn-chip" data-preset="dual_mrp">Dual MRP Anomaly</button>
+          <button type="button" class="btn-chip" data-preset="missing_fields">Missing Consumer Care</button>
+          <button type="button" class="btn-chip" data-preset="exempt_bulk">Exempt (30 kg Pack)</button>
+          <button type="button" class="btn-chip" data-preset="exempt_small">Small Non-Tobacco (5g)</button>
+          <button type="button" class="btn-chip" data-preset="tobacco_small">Small Tobacco (5g - Non-Exempt)</button>
         </div>
       </div>
 
       <div class="action-bar">
-        <button type="button" class="btn btn-primary btn-large" id="btnAnalyze" disabled>
-          <span id="btnAnalyzeText">🔍 Check Compliance</span>
+        <button type="button" class="btn btn-primary" id="btnAnalyze" disabled>
+          <span id="btnAnalyzeText">Check Compliance</span>
         </button>
       </div>
     </section>
+
+    <!-- Signature Element 1: Calibration Ruler Section Divider -->
+    <div class="calibration-ruler" role="separator" aria-hidden="true"></div>
 
     <!-- Active Scanning Progress Container (Shows during scan processing) -->
     <div class="card scanning-progress-card hidden" id="scanningProgressCard">
@@ -102,30 +133,41 @@
       <div class="results-header">
         <div>
           <h2 class="card-title">2. Screening Results</h2>
-          <p class="card-desc" id="scanMetaText">Scan ID: LM-XXXXXX &bull; Evaluated on: --</p>
+          <p class="scan-meta-text" id="scanMetaText">Scan ID: LM-XXXXXX &bull; Evaluated on: --</p>
         </div>
         <div class="results-actions">
           <button type="button" class="btn btn-export" id="btnExportPdf">
-            📄 Download PDF Report
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Download PDF Report
           </button>
         </div>
       </div>
 
-      <!-- Compliance Summary Bar (Positioned above the status banner) -->
+      <!-- Compliance Summary Bar (Signature Element 2: Ruler fill) -->
       <div class="compliance-summary-bar" id="complianceSummaryBar">
         <div class="summary-bar-header">
           <span class="summary-bar-title" id="summaryBarTitle">Compliance Score: 5 of 5 Mandatory Declarations Passed</span>
           <span class="summary-bar-pct" id="summaryBarPct">100%</span>
         </div>
         <div class="summary-track">
-          <div class="summary-fill" id="summaryFill" style="width: 100%;"></div>
+          <div class="summary-fill" id="summaryFill" style="width: 0%;"></div>
         </div>
         <p class="summary-hint" id="summaryHint">All mandatory declarations meet Rule 6 specifications.</p>
       </div>
 
-      <!-- Overall Status Banner -->
+      <!-- Overall Status Banner (Dominant Visual Verdict) -->
       <div class="status-banner" id="statusBanner">
-        <div class="status-icon" id="statusIcon">✓</div>
+        <div class="status-icon-box" id="statusIconBox">
+          <svg class="status-icon-svg" id="statusIconSvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
         <div class="status-info">
           <h3 class="status-title" id="statusTitle">COMPLIANT</h3>
           <p class="status-desc" id="statusDesc">All 5 mandatory declarations meet Legal Metrology (Packaged Commodities) Rules, 2011 requirements.</p>
@@ -135,14 +177,16 @@
       <!-- Exemption Alert Block (Shown only if exempt) -->
       <div class="exemption-box hidden" id="exemptionBox">
         <div class="exemption-box-header">
-          <span class="exemption-icon">🛡️</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
           <h4>Statutory Exemption Applicable</h4>
         </div>
         <p id="exemptionReasonText">Package is exempt from retail packaged commodity declaration rules.</p>
         <p class="exemption-ref" id="exemptionRefText">Reference: Rule 3 / Rule 26, Legal Metrology (Packaged Commodities) Rules, 2011.</p>
       </div>
 
-      <!-- 5 Mandatory Fields Results Grid -->
+      <!-- 5 Mandatory Fields Results Grid (Rendered with Stamped Seals) -->
       <div id="fieldsContainer" class="fields-grid">
         <!-- Field Cards generated dynamically by app.js -->
       </div>
@@ -150,7 +194,7 @@
       <!-- OCR Extracted Text Accordion -->
       <div class="ocr-accordion">
         <button type="button" class="accordion-toggle" id="btnToggleOcr">
-          <span>📜 View Extracted OCR Text Lines (<span id="ocrLineCount">0</span> detected)</span>
+          <span>View Extracted OCR Text Lines (<span id="ocrLineCount" style="font-family: var(--font-mono);">0</span> detected)</span>
           <span class="accordion-arrow" id="accordionArrow">▼</span>
         </button>
         <div class="accordion-content hidden" id="ocrContent">
