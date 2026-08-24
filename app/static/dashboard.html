@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Analytics Dashboard — Legal Metrology Compliance-Assist Engine</title>
+  <title data-i18n="navAnalytics">Analytics Dashboard — Legal Metrology Compliance-Assist Engine</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="/static/style.css">
   <!-- Chart.js for analytics visualization -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
@@ -26,8 +28,8 @@
           <path d="M4 21h16"/>
         </svg>
         <div>
-          <h1 class="brand-title">Legal Metrology Compliance-Assist Engine</h1>
-          <p class="brand-subtitle">Ministry of Consumer Affairs, Food & Public Distribution &bull; Pre-Inspection Screening Portal</p>
+          <h1 class="brand-title" data-i18n="appTitle">Legal Metrology Compliance-Assist Engine</h1>
+          <p class="brand-subtitle" data-i18n="ministryDeptLong">Ministry of Consumer Affairs, Food &amp; Public Distribution &bull; Pre-Inspection Screening Portal</p>
         </div>
       </a>
       <nav class="nav-links">
@@ -36,7 +38,7 @@
             <circle cx="11" cy="11" r="8"/>
             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          Label Scanner
+          <span data-i18n="navLabelScanner">Label Scanner</span>
         </a>
         <a href="/dashboard" class="nav-link active">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -44,8 +46,14 @@
             <line x1="3" y1="9" x2="21" y2="9"/>
             <line x1="9" y1="21" x2="9" y2="9"/>
           </svg>
-          Analytics Dashboard
+          <span data-i18n="navAnalytics">Analytics Dashboard</span>
         </a>
+
+        <!-- Bilingual Language Switcher (EN | हिन्दी) -->
+        <div class="lang-switcher" id="langSwitcher" role="group" aria-label="Language Selector">
+          <button type="button" class="btn-lang active" data-lang="en" aria-label="English">EN</button>
+          <button type="button" class="btn-lang" data-lang="hi" aria-label="Hindi">हिन्दी</button>
+        </div>
       </nav>
     </div>
   </header>
@@ -59,7 +67,7 @@
         <line x1="12" y1="8" x2="12.01" y2="8"/>
       </svg>
       <p class="disclaimer-text">
-        <strong>Statutory Notice:</strong> This dashboard displays automated pre-inspection compliance screening records. It does not constitute a statutory enforcement log or notice under Section 15 of the Legal Metrology Act, 2009.
+        <strong data-i18n="statutoryNoticeLabel">Statutory Notice:</strong> <span data-i18n="dashboardStatutoryNotice">This dashboard displays automated pre-inspection compliance screening records. It does not constitute a statutory enforcement log or notice under Section 15 of the Legal Metrology Act, 2009.</span>
       </p>
     </div>
   </div>
@@ -69,8 +77,8 @@
     <!-- Dashboard Header -->
     <div class="dashboard-header-row">
       <div>
-        <h2 class="section-title">Packaged Commodity Compliance Analytics</h2>
-        <p class="section-subtitle">Real-time aggregate telemetry and historical screening logs from automated label inspections.</p>
+        <h2 class="section-title" data-i18n="dashboardTitle">Packaged Commodity Compliance Analytics</h2>
+        <p class="section-subtitle" data-i18n="dashboardSubtitle">Real-time aggregate telemetry and historical screening logs from automated label inspections.</p>
       </div>
       <div class="dashboard-actions">
         <button type="button" class="btn btn-secondary btn-sm" id="btnRefresh">
@@ -79,9 +87,9 @@
             <polyline points="1 20 1 14 7 14"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
           </svg>
-          Refresh Telemetry
+          <span data-i18n="btnRefreshTelemetry">Refresh Telemetry</span>
         </button>
-        <a href="/" class="btn btn-primary btn-sm">New Label Scan</a>
+        <a href="/" class="btn btn-primary btn-sm" data-i18n="btnNewScan">New Label Scan</a>
       </div>
     </div>
 
@@ -98,9 +106,9 @@
           </svg>
         </div>
         <div class="metric-body">
-          <span class="metric-label">Total Screenings</span>
+          <span class="metric-label" data-i18n="metricTotalLabel">Total Screenings</span>
           <span class="metric-value" id="metricTotal">0</span>
-          <span class="metric-hint">Cumulative scan count</span>
+          <span class="metric-hint" data-i18n="metricTotalHint">Cumulative scan count</span>
         </div>
       </div>
 
@@ -112,7 +120,7 @@
           </svg>
         </div>
         <div class="metric-body">
-          <span class="metric-label">Compliant Packages</span>
+          <span class="metric-label" data-i18n="metricCompliantLabel">Compliant Packages</span>
           <span class="metric-value" id="metricCompliant">0</span>
           <span class="metric-hint" id="metricCompliantPct">0% compliance rate</span>
         </div>
@@ -127,9 +135,9 @@
           </svg>
         </div>
         <div class="metric-body">
-          <span class="metric-label">Non-Compliant / Flagged</span>
+          <span class="metric-label" data-i18n="metricNonCompliantLabel">Non-Compliant / Flagged</span>
           <span class="metric-value" id="metricNonCompliant">0</span>
-          <span class="metric-hint">Missing mandatory fields or anomalies</span>
+          <span class="metric-hint" data-i18n="metricNonCompliantHint">Missing mandatory fields or anomalies</span>
         </div>
       </div>
 
@@ -140,9 +148,9 @@
           </svg>
         </div>
         <div class="metric-body">
-          <span class="metric-label">Statutory Exemptions</span>
+          <span class="metric-label" data-i18n="metricExemptLabel">Statutory Exemptions</span>
           <span class="metric-value" id="metricExempt">0</span>
-          <span class="metric-hint">Rule 3 / Rule 26 exemptions</span>
+          <span class="metric-hint" data-i18n="metricExemptHint">Rule 3 / Rule 26 exemptions</span>
         </div>
       </div>
     </div>
@@ -154,8 +162,8 @@
     <div class="charts-grid">
       <div class="chart-card">
         <div class="card-header-clean">
-          <h3 class="card-title-sm">Compliance Ratio Breakdown</h3>
-          <span class="badge-subtle">Distribution</span>
+          <h3 class="card-title-sm" data-i18n="chartBreakdownTitle">Compliance Ratio Breakdown</h3>
+          <span class="badge-subtle" data-i18n="chartDistribution">Distribution</span>
         </div>
         <div class="chart-container">
           <canvas id="breakdownChart"></canvas>
@@ -164,8 +172,8 @@
 
       <div class="chart-card">
         <div class="card-header-clean">
-          <h3 class="card-title-sm">Screening Category Volume</h3>
-          <span class="badge-subtle">Volume Metrics</span>
+          <h3 class="card-title-sm" data-i18n="chartVolumeTitle">Screening Category Volume</h3>
+          <span class="badge-subtle" data-i18n="chartVolumeMetrics">Volume Metrics</span>
         </div>
         <div class="chart-container">
           <canvas id="volumeBarChart"></canvas>
@@ -177,8 +185,8 @@
     <div class="card table-card">
       <div class="table-header-row">
         <div>
-          <h3 class="card-title">Recent Inspection Records</h3>
-          <p class="card-desc">Most recent packaged commodity screening logs recorded in Supabase cloud database.</p>
+          <h3 class="card-title" data-i18n="recentRecordsTitle">Recent Inspection Records</h3>
+          <p class="card-desc" data-i18n="recentRecordsDesc">Most recent packaged commodity screening logs recorded in Supabase cloud database.</p>
         </div>
         <span class="badge-subtle" id="tableRecordCount">Showing 0 records</span>
       </div>
@@ -190,13 +198,13 @@
             <circle cx="11" cy="11" r="8"/>
             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input type="text" id="scanSearchInput" placeholder="Search by Filename, Scan ID, Finding...">
+          <input type="text" id="scanSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search by Filename, Scan ID, Finding...">
         </div>
         <div class="filter-pills">
-          <button type="button" class="filter-pill active" data-filter="all">All Records</button>
-          <button type="button" class="filter-pill" data-filter="compliant">Compliant (Pass)</button>
-          <button type="button" class="filter-pill" data-filter="non-compliant">Flagged / Non-Compliant</button>
-          <button type="button" class="filter-pill" data-filter="exempt">Exempt</button>
+          <button type="button" class="filter-pill active" data-filter="all" data-i18n="filterAll">All Records</button>
+          <button type="button" class="filter-pill" data-filter="compliant" data-i18n="filterCompliant">Compliant (Pass)</button>
+          <button type="button" class="filter-pill" data-filter="non-compliant" data-i18n="filterNonCompliant">Flagged / Non-Compliant</button>
+          <button type="button" class="filter-pill" data-filter="exempt" data-i18n="filterExempt">Exempt</button>
         </div>
       </div>
 
@@ -207,9 +215,9 @@
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
-        <h4 class="empty-title">No Scans Recorded Yet</h4>
-        <p class="empty-desc">Upload and evaluate product label images on the scanner page to view screening logs and analytics here.</p>
-        <a href="/" class="btn btn-primary btn-sm">Scan a Product Label Now</a>
+        <h4 class="empty-title" data-i18n="emptyTitle">No Scans Recorded Yet</h4>
+        <p class="empty-desc" data-i18n="emptyDesc">Upload and evaluate product label images on the scanner page to view screening logs and analytics here.</p>
+        <a href="/" class="btn btn-primary btn-sm" data-i18n="btnScanNow">Scan a Product Label Now</a>
       </div>
 
       <!-- Scans Table -->
@@ -217,12 +225,12 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Timestamp (IST)</th>
-              <th>Scan Reference ID</th>
-              <th>Filename</th>
-              <th>Verdict</th>
-              <th>Fields Verified</th>
-              <th>Screening Finding</th>
+              <th data-i18n="thTimestamp">Timestamp (IST)</th>
+              <th data-i18n="thScanId">Scan Reference ID</th>
+              <th data-i18n="thFilename">Filename</th>
+              <th data-i18n="thVerdict">Verdict</th>
+              <th data-i18n="thFieldsVerified">Fields Verified</th>
+              <th data-i18n="thFinding">Screening Finding</th>
             </tr>
           </thead>
           <tbody id="scansTableBody">
@@ -237,13 +245,14 @@
   <!-- Footer -->
   <footer class="app-footer">
     <div class="container footer-content">
-      <p>Legal Metrology (Packaged Commodities) Rules, 2011 &bull; Smart India Hackathon PS-26034</p>
-      <p class="footer-disclaimer">Designed for pre-inspection screening assistance &bull; Ministry of Consumer Affairs, Food & Public Distribution</p>
+      <p data-i18n="footerCopy">Legal Metrology (Packaged Commodities) Rules, 2011 &bull; Smart India Hackathon PS-26034</p>
+      <p class="footer-disclaimer" data-i18n="footerLegal">Designed for pre-inspection screening assistance &bull; Ministry of Consumer Affairs, Food &amp; Public Distribution</p>
     </div>
   </footer>
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <script src="/static/i18n.js"></script>
   <script src="/static/dashboard.js"></script>
 </body>
 </html>

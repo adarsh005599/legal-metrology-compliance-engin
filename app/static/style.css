@@ -1,3 +1,6 @@
+/* Import Google Font for Devanagari (Hindi) */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+
 /* ==============================================================================
    Legal Metrology Compliance-Assist Engine — "Liquid Glass & Calibration Instrument" Edition
    Visual Language: Calibrated Regulatory Instrument + Liquid Glassmorphism (Light Theme)
@@ -53,6 +56,7 @@
 
   --font-ui: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-hindi: 'Noto Sans Devanagari', 'IBM Plex Sans', sans-serif;
 
   /* Specular Highlight & Elevation */
   --shadow-instrument: 0 4px 20px -2px rgba(16, 29, 51, 0.05), 0 0 0 1px rgba(229, 231, 235, 0.6);
@@ -83,6 +87,28 @@ body {
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global Hindi Typography Switching */
+body.lang-hi,
+[lang="hi"] body {
+  font-family: var(--font-hindi);
+}
+
+body.lang-hi .brand-title,
+body.lang-hi .card-title,
+body.lang-hi .section-title,
+body.lang-hi .status-title,
+body.lang-hi .field-name,
+body.lang-hi .btn,
+body.lang-hi .nav-link,
+body.lang-hi .btn-chip,
+body.lang-hi .filter-pill,
+body.lang-hi .toast-message,
+body.lang-hi .badge-stamp,
+body.lang-hi .disclaimer-text,
+body.lang-hi .footer-content {
+  font-family: var(--font-hindi);
 }
 
 /* Container */
@@ -233,6 +259,50 @@ body {
   background: linear-gradient(135deg, rgba(180, 131, 62, 0.3), rgba(180, 131, 62, 0.15));
   border-color: var(--color-brass);
   box-shadow: 0 0 12px var(--color-brass-glow);
+}
+
+/* ==============================================================================
+   LANGUAGE SWITCHER (EN | हिन्दी)
+   ============================================================================== */
+.lang-switcher {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(22, 35, 59, 0.85);
+  border: 1px solid rgba(180, 131, 62, 0.45);
+  border-radius: 20px;
+  padding: 2px;
+  margin-left: 0.5rem;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.btn-lang {
+  background: transparent;
+  border: none;
+  font-family: var(--font-ui);
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: #A0ABBA;
+  padding: 4px 10px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+}
+
+.btn-lang:hover {
+  color: #FFFFFF;
+}
+
+.btn-lang.active {
+  background: linear-gradient(135deg, #B4833E 0%, #D9A74A 100%);
+  color: #101D33;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-lang:focus-visible {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 1px;
 }
 
 /* ==============================================================================

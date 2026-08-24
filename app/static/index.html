@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Legal Metrology Compliance-Assist Engine | Calibration Instrument</title>
+  <title data-i18n="appTitle">Legal Metrology Compliance-Assist Engine</title>
   
-  <!-- Preconnect to Google Fonts for fast IBM Plex loading -->
+  <!-- Preconnect to Google Fonts for IBM Plex & Noto Sans Devanagari -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -29,8 +29,8 @@
           </svg>
         </div>
         <div class="brand-text">
-          <div class="brand-dept">Ministry of Consumer Affairs &bull; Legal Metrology Division</div>
-          <h1 class="brand-title">Legal Metrology Compliance-Assist Engine</h1>
+          <div class="brand-dept" data-i18n="ministryDept">Ministry of Consumer Affairs &bull; Legal Metrology Division</div>
+          <h1 class="brand-title" data-i18n="appTitle">Legal Metrology Compliance-Assist Engine</h1>
         </div>
       </div>
       <nav class="header-nav">
@@ -40,7 +40,7 @@
             <circle cx="8.5" cy="8.5" r="1.5"/>
             <polyline points="21 15 16 10 5 21"/>
           </svg>
-          Screen Label
+          <span data-i18n="navScanLabel">Screen Label</span>
         </a>
         <a href="/dashboard" class="nav-link">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -48,8 +48,14 @@
             <line x1="12" y1="20" x2="12" y2="4"/>
             <line x1="6" y1="20" x2="6" y2="14"/>
           </svg>
-          Screening Dashboard
+          <span data-i18n="navDashboard">Screening Dashboard</span>
         </a>
+
+        <!-- Bilingual Language Switcher (EN | हिन्दी) -->
+        <div class="lang-switcher" id="langSwitcher" role="group" aria-label="Language Selector">
+          <button type="button" class="btn-lang active" data-lang="en" aria-label="English">EN</button>
+          <button type="button" class="btn-lang" data-lang="hi" aria-label="Hindi">हिन्दी</button>
+        </div>
       </nav>
     </div>
   </header>
@@ -63,7 +69,7 @@
         <line x1="12" y1="8" x2="12.01" y2="8"/>
       </svg>
       <span class="disclaimer-text">
-        <strong>Statutory Notice:</strong> This is a compliance-assist screening report, not a statutory notice under the Legal Metrology Act, 2009. Official enforcement or seizure is strictly reserved for designated Legal Metrology Officers under Section 15.
+        <strong data-i18n="statutoryNoticeLabel">Statutory Notice:</strong> <span data-i18n="statutoryNoticeText">This is a compliance-assist screening report, not a statutory notice under the Legal Metrology Act, 2009. Official enforcement or seizure is strictly reserved for designated Legal Metrology Officers under Section 15.</span>
       </span>
     </div>
   </div>
@@ -75,8 +81,8 @@
       <div class="card-header">
         <div class="header-flex-row">
           <div>
-            <h2 class="card-title">1. Input Product Label</h2>
-            <p class="card-desc">Upload a label image or capture directly with device camera for local PaddleOCR screening.</p>
+            <h2 class="card-title" data-i18n="inputSectionTitle">1. Input Product Label</h2>
+            <p class="card-desc" data-i18n="inputSectionDesc">Upload a label image or capture directly with device camera for local PaddleOCR screening.</p>
           </div>
           <!-- Input Mode Switcher -->
           <div class="input-mode-toggle">
@@ -86,14 +92,14 @@
                 <polyline points="17 8 12 3 7 8"/>
                 <line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              Upload Image
+              <span data-i18n="btnUploadImage">Upload Image</span>
             </button>
             <button type="button" class="btn-mode" id="btnModeCamera">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                 <circle cx="12" cy="13" r="4"/>
               </svg>
-              Scan with Camera
+              <span data-i18n="btnScanCamera">Scan with Camera</span>
             </button>
           </div>
         </div>
@@ -109,13 +115,13 @@
               <polyline points="17 8 12 3 7 8"/>
               <line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-            <p class="upload-prompt-text"><strong>Click to browse</strong> or drag and drop label photo here</p>
-            <p class="upload-hint">Supports PNG, JPG, JPEG, WEBP (Max 15MB)</p>
+            <p class="upload-prompt-text"><strong data-i18n="dropzoneClick">Click to browse</strong> <span data-i18n="dropzoneDrag">or drag and drop label photo here</span></p>
+            <p class="upload-hint" data-i18n="dropzoneHint">Supports PNG, JPG, JPEG, WEBP (Max 15MB)</p>
           </div>
 
           <div class="preview-container hidden" id="previewContainer">
             <img id="imagePreview" alt="Label Preview" class="image-preview">
-            <button type="button" class="btn btn-secondary btn-sm" id="btnChangeImage">Change Image</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnChangeImage" data-i18n="btnChangeImage">Change Image</button>
           </div>
         </div>
       </div>
@@ -130,7 +136,7 @@
             <div class="frame-corner top-right"></div>
             <div class="frame-corner bottom-left"></div>
             <div class="frame-corner bottom-right"></div>
-            <div class="viewfinder-text">Align product label within calibration frame</div>
+            <div class="viewfinder-text" data-i18n="alignCameraPrompt">Align product label within calibration frame</div>
           </div>
         </div>
         <div class="camera-controls">
@@ -138,16 +144,16 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
             </svg>
-            Switch Camera
+            <span data-i18n="btnSwitchCamera">Switch Camera</span>
           </button>
           <button type="button" class="btn btn-primary" id="btnCapturePhoto">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <circle cx="12" cy="12" r="3"/>
             </svg>
-            Capture Photo
+            <span data-i18n="btnCapturePhoto">Capture Photo</span>
           </button>
-          <button type="button" class="btn btn-secondary btn-sm" id="btnCancelCamera">Cancel</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnCancelCamera" data-i18n="btnCancel">Cancel</button>
         </div>
       </div>
 
@@ -157,28 +163,28 @@
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
         </svg>
-        <span>Images are processed locally with the self-hosted PaddleOCR engine. No photos or label data are transmitted to external third-party OCR APIs.</span>
+        <span data-i18n="privacyNote">Images are processed locally with the self-hosted PaddleOCR engine. No photos or label data are transmitted to external third-party OCR APIs.</span>
       </div>
 
       <!-- Quick Demo Presets for Testing -->
       <div class="presets-section">
-        <span class="preset-label">Quick Test Presets:</span>
+        <span class="preset-label" data-i18n="quickPresetsLabel">Quick Test Presets:</span>
         <div class="preset-buttons">
-          <button type="button" class="btn-chip" data-preset="compliant">Standard Compliant Pack</button>
-          <button type="button" class="btn-chip" data-preset="dual_mrp">Dual MRP Anomaly</button>
-          <button type="button" class="btn-chip" data-preset="crunchy_bites">Crunchy Bites (Dual MRP Anomaly)</button>
-          <button type="button" class="btn-chip" data-preset="nutrition_panel">Nutrition Panel (Not Exempt)</button>
-          <button type="button" class="btn-chip" data-preset="non_std_unit">Non-Standard Unit ("gm")</button>
-          <button type="button" class="btn-chip" data-preset="missing_fields">Missing Consumer Care</button>
-          <button type="button" class="btn-chip" data-preset="exempt_bulk">Exempt (30 kg Pack)</button>
-          <button type="button" class="btn-chip" data-preset="exempt_small">Small Non-Tobacco (5g)</button>
-          <button type="button" class="btn-chip" data-preset="tobacco_small">Small Tobacco (5g - Non-Exempt)</button>
+          <button type="button" class="btn-chip" data-preset="compliant" data-i18n="presetCompliant">Standard Compliant Pack</button>
+          <button type="button" class="btn-chip" data-preset="dual_mrp" data-i18n="presetDualMrp">Dual MRP Anomaly</button>
+          <button type="button" class="btn-chip" data-preset="crunchy_bites" data-i18n="presetCrunchyBites">Crunchy Bites (Dual MRP Anomaly)</button>
+          <button type="button" class="btn-chip" data-preset="nutrition_panel" data-i18n="presetNutrition">Nutrition Panel (Not Exempt)</button>
+          <button type="button" class="btn-chip" data-preset="non_std_unit" data-i18n="presetNonStdUnit">Non-Standard Unit ("gm")</button>
+          <button type="button" class="btn-chip" data-preset="missing_fields" data-i18n="presetMissingFields">Missing Consumer Care</button>
+          <button type="button" class="btn-chip" data-preset="exempt_bulk" data-i18n="presetExemptBulk">Exempt (30 kg Pack)</button>
+          <button type="button" class="btn-chip" data-preset="exempt_small" data-i18n="presetExemptSmall">Small Non-Tobacco (5g)</button>
+          <button type="button" class="btn-chip" data-preset="tobacco_small" data-i18n="presetTobaccoSmall">Small Tobacco (5g - Non-Exempt)</button>
         </div>
       </div>
 
       <div class="action-bar">
         <button type="button" class="btn btn-primary" id="btnAnalyze" disabled>
-          <span id="btnAnalyzeText">Scan Label & Check Compliance</span>
+          <span id="btnAnalyzeText" data-i18n="btnScanAction">Scan Label & Check Compliance</span>
         </button>
       </div>
     </section>
@@ -191,8 +197,8 @@
       <div class="scanning-progress-body">
         <div class="scan-spinner-large"></div>
         <div class="scanning-text-block">
-          <h3 class="scanning-title">Scanning & Evaluating Label...</h3>
-          <p class="scanning-desc" id="scanningProgressStatus">Running PaddleOCR text extraction and evaluating statutory Legal Metrology rules...</p>
+          <h3 class="scanning-title" data-i18n="scanningTitle">Scanning & Evaluating Label...</h3>
+          <p class="scanning-desc" id="scanningProgressStatus" data-i18n="scanningDesc">Running PaddleOCR text extraction and evaluating statutory Legal Metrology rules...</p>
           <div class="scan-progress-bar-track">
             <div class="scan-progress-bar-indeterminate"></div>
           </div>
@@ -204,7 +210,7 @@
     <section class="card results-card hidden" id="resultsSection">
       <div class="results-header">
         <div>
-          <h2 class="card-title">2. Screening Results</h2>
+          <h2 class="card-title" data-i18n="resultsTitle">2. Screening Results</h2>
           <p class="scan-meta-text" id="scanMetaText">Scan ID: LM-XXXXXX &bull; Evaluated on: --</p>
         </div>
         <div class="results-actions">
@@ -216,12 +222,12 @@
               <line x1="16" y1="17" x2="8" y2="17"/>
               <polyline points="10 9 9 9 8 9"/>
             </svg>
-            Download PDF Report
+            <span data-i18n="btnDownloadPdf">Download PDF Report</span>
           </button>
         </div>
       </div>
 
-      <!-- Compliance Summary Bar (Signature Element 2: Ruler fill) -->
+      <!-- Compliance Summary Bar -->
       <div class="compliance-summary-bar" id="complianceSummaryBar">
         <div class="summary-bar-header">
           <span class="summary-bar-title" id="summaryBarTitle">Compliance Score: 5 of 5 Mandatory Declarations Passed</span>
@@ -230,7 +236,7 @@
         <div class="summary-track">
           <div class="summary-fill" id="summaryFill" style="width: 0%;"></div>
         </div>
-        <p class="summary-hint" id="summaryHint">All mandatory declarations meet Rule 6 specifications.</p>
+        <p class="summary-hint" id="summaryHint" data-i18n="allMandatoryMet">All mandatory declarations meet Rule 6 specifications.</p>
       </div>
 
       <!-- Overall Status Banner (Dominant Visual Verdict) -->
@@ -252,10 +258,10 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
-          <h3 class="exemption-box-title">Statutory Exemption Confirmed</h3>
+          <h3 class="exemption-box-title" data-i18n="exemptionTitle">Statutory Exemption Confirmed</h3>
         </div>
         <p class="exemption-box-desc" id="exemptionReasonText">Package meets statutory exemption criteria under Rule 3 or Rule 26.</p>
-        <div class="exemption-ref" id="exemptionRefText">Rule 3 & Rule 26, Legal Metrology (Packaged Commodities) Rules, 2011</div>
+        <div class="exemption-ref" id="exemptionRefText" data-i18n="exemptionRuleRef">Rule 3 & Rule 26, Legal Metrology (Packaged Commodities) Rules, 2011</div>
       </div>
 
       <!-- Mandatory Declarations Cards Grid (Rule 6) -->
@@ -272,7 +278,7 @@
               <line x1="9" y1="20" x2="15" y2="20"/>
               <line x1="12" y1="4" x2="12" y2="20"/>
             </svg>
-            View OCR Text Extraction (<span id="ocrLineCount">0</span> lines detected)
+            <span data-i18n="viewOcrText">View OCR Text Extraction</span> (<span id="ocrLineCount">0</span> <span data-i18n="linesDetected">lines detected</span>)
           </span>
           <svg class="accordion-arrow" id="accordionArrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"/>
@@ -291,13 +297,14 @@
 
   <footer class="instrument-footer">
     <div class="container footer-content">
-      <p class="footer-copy">&copy; 2026 Legal Metrology Compliance-Assist Screening Engine &bull; SIH PS-26034</p>
-      <p class="footer-legal">Ministry of Consumer Affairs, Food &amp; Public Distribution &bull; Powered by PaddleOCR</p>
+      <p class="footer-copy" data-i18n="footerCopy">&copy; 2026 Legal Metrology Compliance-Assist Screening Engine &bull; SIH PS-26034</p>
+      <p class="footer-legal" data-i18n="footerLegal">Ministry of Consumer Affairs, Food &amp; Public Distribution &bull; Powered by PaddleOCR</p>
     </div>
   </footer>
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <script src="/static/i18n.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

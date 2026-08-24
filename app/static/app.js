@@ -1,4 +1,4 @@
-// Legal Metrology Compliance-Assist Engine Frontend Logic — "Liquid Glass & Calibration" Edition
+// Legal Metrology Compliance-Assist Engine Frontend Logic — "Liquid Glass & Bilingual" Edition
 
 document.addEventListener('DOMContentLoaded', () => {
   // Elements
@@ -72,42 +72,58 @@ document.addEventListener('DOMContentLoaded', () => {
   // Presets
   const PRESETS = {
     compliant: {
+      key: "presetCompliant",
       title: "Standard Compliant Pack",
       text: "ORGANIC CASHEW NUTS\nNet Wt: 500 g\nMRP Rs. 650.00 (Incl. of all taxes)\nMFD: 10/2024\nManufactured & Packed by: Green Agro Foods Pvt Ltd, Plot 42, GIDC, Ahmedabad, Gujarat 382330\nConsumer Care Helpline: 1800-200-4567 | Email: care@greenagro.com"
     },
     dual_mrp: {
+      key: "presetDualMrp",
       title: "Dual MRP Anomaly",
       text: "CRUNCHY CHOCO COOKIES 200g\nMRP Rs.20 MRPRs.25*\nMFD: 09/2024\nPacked by: Sweet Bakes Ltd, Okhla Phase 3, New Delhi 110020\nConsumer Helpline: 1800-222-3333 | care@sweetbakes.in"
     },
     crunchy_bites: {
+      key: "presetCrunchyBites",
       title: "Crunchy Bites (Dual MRP Anomaly)",
       text: "CRUNCHY BITES CORN CHIPS\nNet Wt: 200 g\nMRP Rs.20 / MRPRs.25*\nMFD: 09/2024\nManufactured by: Sweet Bakes Ltd, Okhla Phase 3, New Delhi 110020\nCustomer Care: 1800-111-2222 | care@sweetbakes.in"
     },
     nutrition_panel: {
+      key: "presetNutrition",
       title: "Nutrition Panel (Not Exempt)",
       text: "HIGH PROTEIN PEANUT BUTTER\nNutrition Facts per 100g: Protein 25g, Total Fat 6g, Sugars 4g, Sodium 50mg\nNet Weight: 350 g\nMRP Rs. 280.00\nMFD: 10/2024\nManufactured by: NutriFoods India Ltd, Pune 411001\nConsumer Care: 1800-222-1111 | support@nutrifoods.in"
     },
     non_std_unit: {
+      key: "presetNonStdUnit",
       title: "Non-Standard Unit ('gm')",
       text: "ROYAL CHAI MASALA\nNet Wt: 100 gm\nMRP Rs. 85.00\nMFD: 08/2024\nManufactured by: Spice Wonders Ltd, Andheri East, Mumbai 400069\nCustomer Care: 9820012345"
     },
     missing_fields: {
+      key: "presetMissingFields",
       title: "Missing Consumer Care Details",
       text: "EXTRA VIRGIN MUSTARD OIL\nNet Volume: 1 L\nMRP Rs. 210.00\nMFD: 07/2024\nManufactured by: Shudh Oil Mills, Industrial Area, Jaipur, Rajasthan 302013"
     },
     exempt_bulk: {
+      key: "presetExemptBulk",
       title: "Exempt Bulk 30kg Pack",
       text: "WHOLE WHEAT ATTA - 30 kg\nNot for retail sale - Institutional & Commercial Supply\nMRP Rs. 1150.00\nMFD: 06/2024\nManufactured by: Bharat Flour Mills Ltd, Ludhiana 141001"
     },
     exempt_small: {
+      key: "presetExemptSmall",
       title: "Exempt Small Non-Tobacco Pack (5g)",
       text: "NATURAL CARDAMOM MOUTH FRESHENER\nNet Wt: 5 g\nMRP Rs. 10.00\nMFD: 10/2024\nMfd by: Fresh Herbs Ltd, Haridwar, Uttarakhand"
     },
     tobacco_small: {
+      key: "presetTobaccoSmall",
       title: "Small Tobacco Pack (5g - Never Exempt)",
       text: "PREMIUM TOBACCO KHAINI\nNet Wt: 5 g\nMRP Rs. 20.00\nMFD: 09/2024\nManufactured by: Desi Tobacco Products, Kanpur, UP 208001\nConsumer Helpline: 9876543210"
     }
   };
+
+  // Re-render when language is switched
+  window.addEventListener('languageChanged', () => {
+    if (currentReport) {
+      renderResults(currentReport);
+    }
+  });
 
   // ==============================================================================
   // INPUT MODE SWITCHING & CAMERA WORKFLOW
@@ -142,10 +158,10 @@ document.addEventListener('DOMContentLoaded', () => {
       };
       mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       cameraVideo.srcObject = mediaStream;
-      showToast('Live camera scanner ready', 'info');
+      showToast(t('toastCameraReady', 'Live camera scanner ready'), 'info');
     } catch (err) {
       console.error('Camera access error:', err);
-      showToast('Camera access unavailable. Switching to file upload.', 'warning');
+      showToast(t('toastCameraError', 'Camera access unavailable. Switching to file upload.'), 'warning');
       btnModeUpload.click();
     }
   }
@@ -171,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnCapturePhoto.addEventListener('click', () => {
     if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) {
-      showToast('Camera video stream is not ready yet', 'warning');
+      showToast(t('toastCameraError', 'Camera video stream is not ready yet'), 'warning');
       return;
     }
 
@@ -182,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cameraCanvas.toBlob((blob) => {
       if (!blob) {
-        showToast('Failed to capture snapshot', 'error');
+        showToast(t('toastCameraError', 'Failed to capture snapshot'), 'error');
         return;
       }
       const capturedFile = new File([blob], `camera_scan_${Date.now()}.png`, { type: 'image/png' });
@@ -193,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnModeCamera.classList.remove('active');
 
       handleFileSelection(capturedFile);
-      showToast('Photo captured from camera', 'success');
+      showToast(t('toastPhotoCaptured', 'Photo captured from camera'), 'success');
     }, 'image/png');
   });
 
@@ -253,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleFileSelection(file) {
     if (!file.type.startsWith('image/')) {
-      showToast('Please upload a valid image file (PNG, JPG, JPEG, WEBP)', 'warning');
+      showToast(t('toastInvalidImage', 'Please upload a valid image file (PNG, JPG, JPEG, WEBP)'), 'warning');
       return;
     }
     currentFile = file;
@@ -266,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
       dropzonePrompt.classList.add('hidden');
       previewContainer.classList.remove('hidden');
       btnAnalyze.disabled = false;
-      showToast(`Selected: ${file.name}`, 'info');
+      showToast(`${t('toastImageSelected', 'Selected image:')} ${file.name}`, 'info');
     };
     reader.readAsDataURL(file);
   }
@@ -298,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       ctx.fillStyle = "#101D33";
       ctx.font = "bold 15px 'IBM Plex Sans', sans-serif";
-      ctx.fillText(`[DEMO PRESET] ${preset.title}`, 26, 38);
+      ctx.fillText(`[PRESET] ${t(preset.key, preset.title)}`, 26, 38);
 
       ctx.font = "13px 'IBM Plex Mono', monospace";
       ctx.fillStyle = "#1B2430";
@@ -311,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
       dropzonePrompt.classList.add('hidden');
       previewContainer.classList.remove('hidden');
       btnAnalyze.disabled = false;
-      showToast(`Loaded preset: ${preset.title}`, 'info');
+      showToast(`${t('toastPresetLoaded', 'Loaded preset:')} ${t(preset.key, preset.title)}`, 'info');
     });
   });
 
@@ -358,20 +374,20 @@ document.addEventListener('DOMContentLoaded', () => {
       renderResults(data);
 
       if (data.is_exempt) {
-        showToast('Statutory Exemption Applied (Rule 3/26)', 'info');
+        showToast(t('toastExemptApplied', 'Statutory Exemption Applied (Rule 3/26)'), 'info');
       } else if (data.overall_status === 'COMPLIANT') {
-        showToast('Screening Passed: 100% Compliant', 'success');
+        showToast(t('toastScanComplete', 'Screening Passed: 100% Compliant'), 'success');
       } else if (data.overall_status === 'NON_COMPLIANT') {
         const hasDual = (data.fields || []).some(f => (f.flag || '').includes('Dual pricing'));
         if (hasDual) {
-          showToast('Dual pricing anomaly detected (Rule 32)', 'warning');
+          showToast(t('toastDualMrpAlert', 'Dual pricing anomaly detected (Rule 32)'), 'warning');
         } else {
-          showToast('Screening Flagged: Review Rule 6 findings', 'warning');
+          showToast(t('toastFlaggedAlert', 'Screening Flagged: Review Rule 6 findings'), 'warning');
         }
       }
     } catch (err) {
       console.error('Scan error:', err);
-      showToast(`Error scanning label: ${err.message}`, 'error');
+      showToast(`${t('toastPdfError', 'Error')}: ${err.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -380,27 +396,27 @@ document.addEventListener('DOMContentLoaded', () => {
   function setLoading(isLoading) {
     if (isLoading) {
       btnAnalyze.disabled = true;
-      btnAnalyzeText.textContent = "Calibrating & Screening...";
+      btnAnalyzeText.textContent = t('btnScanningAction', 'Calibrating & Screening...');
       if (scanningProgressCard) scanningProgressCard.classList.remove('hidden');
       if (resultsSection) resultsSection.classList.add('hidden');
     } else {
       btnAnalyze.disabled = false;
-      btnAnalyzeText.textContent = "Scan Label & Check Compliance";
+      btnAnalyzeText.textContent = t('btnScanAction', 'Scan Label & Check Compliance');
       if (scanningProgressCard) scanningProgressCard.classList.add('hidden');
     }
   }
 
   // ==============================================================================
-  // RENDER SCREENING RESULTS
+  // RENDER SCREENING RESULTS (Bilingual)
   // ==============================================================================
 
   function renderResults(report) {
-    scanMetaText.innerHTML = `<strong>Scan Ref ID:</strong> <span class="ref-code">${escapeHtml(report.scan_id)}</span> &bull; <strong>Evaluated on:</strong> ${escapeHtml(report.timestamp)}`;
+    scanMetaText.innerHTML = `<strong>${t('scanRefLabel', 'Scan Ref ID:')}</strong> <span class="ref-code">${escapeHtml(report.scan_id)}</span> &bull; <strong>${t('evaluatedOnLabel', 'Evaluated on:')}</strong> ${escapeHtml(report.timestamp)}`;
     
     // 1. Compliance Summary Progress Bar
     if (report.is_exempt) {
-      if (summaryBarTitle) summaryBarTitle.textContent = "Statutory Exemption Applied (Rule 3 / Rule 26)";
-      if (summaryBarPct) summaryBarPct.textContent = "EXEMPT";
+      if (summaryBarTitle) summaryBarTitle.textContent = t('statusExempt', 'Statutory Exemption Applied (Rule 3 / Rule 26)');
+      if (summaryBarPct) summaryBarPct.textContent = t('stampExempt', 'EXEMPT');
       if (summaryFill) {
         summaryFill.className = "summary-fill summary-fill-exempt";
         summaryFill.style.width = "0%";
@@ -408,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
           setTimeout(() => { summaryFill.style.width = "100%"; }, 50);
         });
       }
-      if (summaryHint) summaryHint.textContent = "Package meets statutory exemption criteria under Rule 3 / Rule 26. Standard retail declaration rules are waived.";
+      if (summaryHint) summaryHint.textContent = t('statusExemptDesc', 'Package meets statutory exemption criteria under Rule 3 / Rule 26. Standard retail declaration rules are waived.');
     } else {
       const totalFields = 5;
       const passedFields = (report.fields || []).filter(f => f.status === 'PASS').length;
@@ -416,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const hasWarning = (report.fields || []).some(f => f.status === 'WARNING' || f.status === 'FLAGGED');
       const pct = Math.round((passedFields / totalFields) * 100);
 
-      if (summaryBarTitle) summaryBarTitle.textContent = `Compliance Score: ${passedFields} of ${totalFields} Mandatory Declarations Verified`;
+      if (summaryBarTitle) summaryBarTitle.textContent = `${t('complianceScoreLabel', 'Compliance Score:')} ${passedFields} / ${totalFields} ${t('declarationsPassed', 'Mandatory Declarations Passed')}`;
       if (summaryBarPct) summaryBarPct.textContent = `${pct}%`;
       if (summaryFill) {
         summaryFill.style.width = "0%";
@@ -433,9 +449,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (summaryHint) {
         if (passedFields === totalFields) {
-          summaryHint.textContent = "All 5 mandatory statutory declarations satisfy Legal Metrology (Packaged Commodities) Rules, 2011 specifications.";
+          summaryHint.textContent = t('allMandatoryMet', 'All 5 mandatory statutory declarations satisfy Legal Metrology (Packaged Commodities) Rules, 2011 specifications.');
         } else {
-          summaryHint.textContent = `${totalFields - passedFields} mandatory declaration(s) are missing, flagged, or non-compliant under Rule 6.`;
+          summaryHint.textContent = `${totalFields - passedFields} ${t('declarationsMissing', 'mandatory declaration(s) are missing, flagged, or non-compliant under Rule 6.')}`;
         }
       }
     }
@@ -447,43 +463,77 @@ document.addEventListener('DOMContentLoaded', () => {
     if (overall === 'COMPLIANT') {
       statusBanner.classList.add('compliant');
       statusIconBox.innerHTML = ICONS.check;
-      statusTitle.textContent = 'COMPLIANT';
-      statusDesc.textContent = 'All 5 mandatory declarations meet Legal Metrology (Packaged Commodities) Rules, 2011 specifications.';
+      statusTitle.textContent = t('statusCompliant', 'COMPLIANT');
+      statusDesc.textContent = t('statusCompliantDesc', 'All 5 mandatory declarations meet Legal Metrology (Packaged Commodities) Rules, 2011 requirements.');
     } else if (overall === 'EXEMPT') {
       statusBanner.classList.add('exempt');
       statusIconBox.innerHTML = ICONS.shield;
-      statusTitle.textContent = 'STATUTORY EXEMPTION APPLIED';
-      statusDesc.textContent = 'Package meets statutory exemption criteria under Rule 3 / Rule 26. Standard retail declaration rules are waived.';
+      statusTitle.textContent = t('statusExempt', 'STATUTORY EXEMPTION APPLIED');
+      statusDesc.textContent = t('statusExemptDesc', 'Package meets statutory exemption criteria under Rule 3 / Rule 26. Standard retail declaration rules are waived.');
     } else if (overall === 'UNCERTAIN') {
       statusBanner.classList.add('uncertain');
       statusIconBox.innerHTML = ICONS.uncertain;
-      statusTitle.textContent = 'UNCERTAIN — LOW OCR CONFIDENCE';
-      statusDesc.textContent = 'One or more text fields returned low OCR confidence (< 60%). Physical pre-inspection review is recommended.';
+      statusTitle.textContent = t('statusUncertain', 'UNCERTAIN — LOW OCR CONFIDENCE');
+      statusDesc.textContent = t('statusUncertainDesc', 'One or more text fields returned low OCR confidence (< 60%). Physical pre-inspection review is recommended.');
     } else {
       statusBanner.classList.add('non_compliant');
       statusIconBox.innerHTML = ICONS.cross;
-      statusTitle.textContent = 'NON-COMPLIANT / ANOMALY DETECTED';
-      statusDesc.textContent = 'One or more mandatory declarations are missing, non-compliant, or have price/unit anomalies.';
+      statusTitle.textContent = t('statusNonCompliant', 'NON-COMPLIANT / ANOMALY DETECTED');
+      statusDesc.textContent = t('statusNonCompliantDesc', 'One or more mandatory declarations are missing, non-compliant, or have price/unit anomalies.');
     }
 
     // 3. Exemption box
     if (report.is_exempt && report.exemption_details) {
       exemptionBox.classList.remove('hidden');
-      exemptionReasonText.textContent = report.exemption_details.reason || 'Package meets statutory exemption conditions.';
-      exemptionRefText.textContent = `Reference: ${report.exemption_details.rule_reference || 'Rule 3 & Rule 26'}`;
+      exemptionReasonText.textContent = report.exemption_details.reason || t('statusExemptDesc', 'Package meets statutory exemption criteria.');
+      exemptionRefText.textContent = report.exemption_details.rule_reference || t('exemptionRuleRef', 'Rule 3 & Rule 26');
       fieldsContainer.innerHTML = '';
     } else {
       exemptionBox.classList.add('hidden');
       renderFieldCards(report.fields);
     }
 
-    // 4. OCR Raw text
+    // 4. OCR Raw text (Never translate actual OCR output)
     const lines = report.extracted_lines || [];
     ocrLineCount.textContent = lines.length > 0 ? lines.length : (report.raw_text ? report.raw_text.split('\n').length : 0);
-    rawOcrText.textContent = report.raw_text || lines.map(l => l.text).join('\n') || "(No text detected)";
+    rawOcrText.textContent = report.raw_text || lines.map(l => l.text).join('\n') || t('noTextDetected', '(No text detected)');
 
     resultsSection.classList.remove('hidden');
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function getFieldI18nNames(rawName) {
+    const n = (rawName || '').toLowerCase();
+    if (n.includes('mrp') || n.includes('retail price')) {
+      return { name: t('fieldMrpName', rawName), rule: t('fieldMrpRule', 'Rule 6(1)(e)') };
+    }
+    if (n.includes('quantity') || n.includes('net')) {
+      return { name: t('fieldNetQtyName', rawName), rule: t('fieldNetQtyRule', 'Rule 6(1)(b)') };
+    }
+    if (n.includes('date') || n.includes('mfg') || n.includes('manufacture')) {
+      return { name: t('fieldMfgDateName', rawName), rule: t('fieldMfgDateRule', 'Rule 6(1)(d)') };
+    }
+    if (n.includes('address') || n.includes('packer') || n.includes('manufacturer')) {
+      return { name: t('fieldMfgAddressName', rawName), rule: t('fieldMfgAddressRule', 'Rule 6(1)(a)') };
+    }
+    if (n.includes('consumer') || n.includes('care') || n.includes('contact')) {
+      return { name: t('fieldConsumerCareName', rawName), rule: t('fieldConsumerCareRule', 'Rule 6(1)(f)') };
+    }
+    return { name: rawName, rule: 'Rule 6' };
+  }
+
+  function translateFinding(flagText) {
+    if (!flagText) return '';
+    if (flagText.includes('Dual pricing') || flagText.includes('Rule 32(2)')) {
+      return t('dualPricingDetected', flagText);
+    }
+    if (flagText.includes('Non-standard unit') || flagText.includes('standard SI')) {
+      return t('nonStandardUnitDetected', flagText);
+    }
+    if (flagText.includes('missing') || flagText.includes('Missing')) {
+      return t('missingFieldGeneric', flagText);
+    }
+    return flagText;
   }
 
   function renderFieldCards(fields) {
@@ -497,20 +547,24 @@ document.addEventListener('DOMContentLoaded', () => {
       let stampClass = 'stamp-pass';
       let statusCardClass = 'status-pass';
       let stampIconSvg = ICONS.stampCheck;
+      let stampText = t('stampPass', 'PASS');
       const statusUpper = (field.status || '').toUpperCase();
 
       if (statusUpper === 'FAIL') {
         stampClass = 'stamp-fail';
         statusCardClass = 'status-fail';
         stampIconSvg = ICONS.stampCross;
+        stampText = t('stampFail', 'FAIL');
       } else if (statusUpper === 'WARNING' || statusUpper === 'FLAGGED') {
         stampClass = 'stamp-warning';
         statusCardClass = 'status-warning';
         stampIconSvg = ICONS.stampWarning;
+        stampText = t('stampFlagged', 'FLAGGED');
       } else if (statusUpper === 'UNCERTAIN') {
         stampClass = 'stamp-uncertain';
         statusCardClass = 'status-uncertain';
         stampIconSvg = ICONS.stampUncertain;
+        stampText = t('stampUncertain', 'UNCERTAIN');
       }
 
       card.classList.add(statusCardClass);
@@ -522,26 +576,30 @@ document.addEventListener('DOMContentLoaded', () => {
         confTagHtml = `<span class="field-confidence-tag ${lowClass}">OCR: ${pct}%</span>`;
       }
 
+      // Keep raw detected values intact
       const matchedHtml = field.matched_text 
-        ? `<div class="field-matched-text"><strong>Detected Value:</strong> <code>${escapeHtml(field.matched_text)}</code> ${confTagHtml}</div>` 
-        : `<div class="field-desc-text"><em>No matching declaration detected on label</em></div>`;
+        ? `<div class="field-matched-text"><strong>${t('detectedValueLabel', 'Detected Value:')}</strong> <code>${escapeHtml(field.matched_text)}</code> ${confTagHtml}</div>` 
+        : `<div class="field-desc-text"><em>${t('noDeclarationDetected', 'No matching declaration detected on label')}</em></div>`;
 
-      const flagHtml = field.flag 
-        ? `<div class="field-flag-warning">${ICONS.warning} <strong>Finding:</strong> ${escapeHtml(field.flag)}</div>` 
+      const translatedFlag = translateFinding(field.flag);
+      const flagHtml = translatedFlag 
+        ? `<div class="field-flag-warning">${ICONS.warning} <strong>${t('findingLabel', 'Finding:')}</strong> ${escapeHtml(translatedFlag)}</div>` 
         : '';
 
-      const detailsHtml = `<div class="field-desc-text"><strong>Explanation / Guidance:</strong> ${escapeHtml(field.details)}</div>`;
+      const translatedDetails = translateFinding(field.details) || field.details;
+      const detailsHtml = `<div class="field-desc-text"><strong>${t('explanationLabel', 'Explanation / Guidance:')}</strong> ${escapeHtml(translatedDetails)}</div>`;
 
-      // Official Stamped Seal Badge rendering
+      const { name: i18nFieldName, rule: i18nFieldRule } = getFieldI18nNames(field.field_name);
+
       card.innerHTML = `
         <div class="field-name-block">
-          <span class="field-name">${escapeHtml(field.field_name)}</span>
-          <span class="field-rule">${escapeHtml(field.rule_reference)}</span>
+          <span class="field-name">${escapeHtml(i18nFieldName)}</span>
+          <span class="field-rule">${escapeHtml(i18nFieldRule)}</span>
         </div>
         <div class="badge-stamp-wrapper">
           <div class="badge-stamp ${stampClass}">
             ${stampIconSvg}
-            <span class="stamp-text">${statusUpper}</span>
+            <span class="stamp-text">${stampText}</span>
           </div>
         </div>
         <div class="field-details-block">
@@ -567,8 +625,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnExportPdf.disabled = true;
     const originalText = btnExportPdf.innerHTML;
-    btnExportPdf.innerHTML = '<span>Generating PDF Report...</span>';
-    showToast('Generating formal compliance screening PDF...', 'info');
+    btnExportPdf.innerHTML = `<span>${t('toastPdfExporting', 'Generating PDF Report...')}</span>`;
+    showToast(t('toastPdfExporting', 'Generating formal compliance screening PDF...'), 'info');
 
     try {
       const response = await fetch('/api/export', {
@@ -590,10 +648,10 @@ document.addEventListener('DOMContentLoaded', () => {
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
-      showToast('Compliance report PDF downloaded successfully', 'success');
+      showToast(t('toastPdfSuccess', 'Compliance report PDF downloaded successfully'), 'success');
     } catch (err) {
       console.error('PDF export error:', err);
-      showToast(`Could not export PDF report: ${err.message}`, 'error');
+      showToast(`${t('toastPdfError', 'Could not export PDF report')}: ${err.message}`, 'error');
     } finally {
       btnExportPdf.disabled = false;
       btnExportPdf.innerHTML = originalText;

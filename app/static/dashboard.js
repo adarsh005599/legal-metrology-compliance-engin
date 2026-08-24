@@ -1,8 +1,9 @@
-// Legal Metrology Compliance-Assist Engine Dashboard Logic — "Liquid Glass & Calibration" Edition
+// Legal Metrology Compliance-Assist Engine Dashboard Logic — "Liquid Glass & Bilingual" Edition
 
 let breakdownChartInstance = null;
 let volumeBarChartInstance = null;
 let allFetchedScans = [];
+let lastSummary = null;
 let activeFilter = 'all';
 let searchQuery = '';
 
@@ -27,16 +28,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadDashboardData();
 
+  // Re-render charts and table when language changes
+  window.addEventListener('languageChanged', () => {
+    if (lastSummary) {
+      updateMetricCards(lastSummary);
+      renderCharts(lastSummary);
+    }
+    applyFiltersAndRender();
+  });
+
   if (btnRefresh) {
     btnRefresh.addEventListener('click', async () => {
       if (refreshIconSvg) refreshIconSvg.classList.add('rotating');
       btnRefresh.disabled = true;
-      showToast('Refreshing live telemetry...', 'info');
+      showToast(t('toastRefreshingTelemetry', 'Refreshing live telemetry...'), 'info');
       await loadDashboardData();
       setTimeout(() => {
         if (refreshIconSvg) refreshIconSvg.classList.remove('rotating');
         btnRefresh.disabled = false;
-        showToast('Dashboard telemetry synchronized', 'success');
+        showToast(t('toastTelemetrySynced', 'Dashboard telemetry synchronized'), 'success');
       }, 450);
     });
   }
@@ -70,6 +80,7 @@ async function loadDashboardData() {
     if (summaryRes && summaryRes.ok) {
       summary = await summaryRes.json();
     }
+    lastSummary = summary;
 
     if (recentRes && recentRes.ok) {
       allFetchedScans = await recentRes.json();
@@ -110,9 +121,9 @@ function updateMetricCards(summary) {
     const nonExemptTotal = total - exempt;
     if (nonExemptTotal > 0) {
       const pct = Math.round((compliant / nonExemptTotal) * 100);
-      compliantPctEl.textContent = `${pct}% compliance rate (${compliant}/${nonExemptTotal})`;
+      compliantPctEl.textContent = `${pct}% ${t('metricCompliantRate', 'compliance rate')} (${compliant}/${nonExemptTotal})`;
     } else {
-      compliantPctEl.textContent = `0% compliance rate`;
+      compliantPctEl.textContent = `0% ${t('metricCompliantRate', 'compliance rate')}`;
     }
   }
 }
@@ -134,8 +145,13 @@ function renderCharts(summary) {
 
     const dataValues = total > 0 ? [compliant, nonCompliant, exempt, uncertain] : [1, 0, 0, 0];
     const dataLabels = total > 0 
-      ? ['Compliant (Pass)', 'Non-Compliant (Flagged)', 'Statutory Exempt', 'Uncertain (Low OCR)']
-      : ['No Inspection Data Recorded', '', '', ''];
+      ? [
+          t('chartPassLabel', 'Compliant (Pass)'),
+          t('chartFailLabel', 'Non-Compliant (Flagged)'),
+          t('chartExemptLabel', 'Statutory Exempt'),
+          t('chartUncertainLabel', 'Uncertain (Low OCR)')
+        ]
+      : [t('chartNoData', 'No Inspection Data Recorded'), '', '', ''];
     const bgColors = total > 0 
       ? [PALETTE.pass, PALETTE.fail, PALETTE.exempt, PALETTE.warning]
       : ['#E5E7EB', '#E5E7EB', '#E5E7EB', '#E5E7EB'];
@@ -160,7 +176,7 @@ function renderCharts(summary) {
             position: 'bottom',
             labels: {
               boxWidth: 12,
-              font: { family: "'IBM Plex Sans', sans-serif", size: 11 },
+              font: { family: getLanguage() === 'hi' ? "'Noto Sans Devanagari', sans-serif" : "'IBM Plex Sans', sans-serif", size: 11 },
               color: PALETTE.textSecondary,
               padding: 14
             }
@@ -168,7 +184,7 @@ function renderCharts(summary) {
           tooltip: {
             callbacks: {
               label: (context) => {
-                if (total === 0) return ' No scan data recorded';
+                if (total === 0) return ` ${t('chartNoData', 'No scan data recorded')}`;
                 const label = context.label || '';
                 const val = context.parsed || 0;
                 const pct = total > 0 ? Math.round((val / total) * 100) : 0;
@@ -192,9 +208,14 @@ function renderCharts(summary) {
     volumeBarChartInstance = new Chart(barCtx, {
       type: 'bar',
       data: {
-        labels: ['Compliant', 'Non-Compliant', 'Exempt', 'Uncertain'],
+        labels: [
+          t('chartPassLabel', 'Compliant'),
+          t('chartFailLabel', 'Non-Compliant'),
+          t('chartExemptLabel', 'Exempt'),
+          t('chartUncertainLabel', 'Uncertain')
+        ],
         datasets: [{
-          label: 'Scan Volume',
+          label: t('chartVolumeMetrics', 'Scan Volume'),
           data: [compliant, nonCompliant, exempt, uncertain],
           backgroundColor: [PALETTE.pass, PALETTE.fail, PALETTE.exempt, PALETTE.warning],
           borderRadius: 4,
@@ -208,7 +229,7 @@ function renderCharts(summary) {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (context) => ` Verified: ${context.parsed.y} labels`
+              label: (context) => ` ${t('thFieldsVerified', 'Verified')}: ${context.parsed.y}`
             }
           }
         },
@@ -224,7 +245,7 @@ function renderCharts(summary) {
           },
           x: {
             ticks: { 
-              font: { family: "'IBM Plex Sans', sans-serif", size: 11, weight: '600' },
+              font: { family: getLanguage() === 'hi' ? "'Noto Sans Devanagari', sans-serif" : "'IBM Plex Sans', sans-serif", size: 11, weight: '600' },
               color: PALETTE.textPrimary
             },
             grid: { display: false }
@@ -278,13 +299,13 @@ function renderRecentTable(scans) {
   if (!scans || scans.length === 0) {
     if (tableContainer) tableContainer.classList.add('hidden');
     if (emptyState) emptyState.classList.remove('hidden');
-    if (recordCountEl) recordCountEl.textContent = 'Showing 0 records';
+    if (recordCountEl) recordCountEl.textContent = `${t('showingRecords', 'Showing')} 0 ${t('recordsLabel', 'records')}`;
     return;
   }
 
   if (tableContainer) tableContainer.classList.remove('hidden');
   if (emptyState) emptyState.classList.add('hidden');
-  if (recordCountEl) recordCountEl.textContent = `Showing ${scans.length} of ${allFetchedScans.length} record${allFetchedScans.length === 1 ? '' : 's'}`;
+  if (recordCountEl) recordCountEl.textContent = `${t('showingRecords', 'Showing')} ${scans.length} ${t('ofRecords', 'of')} ${allFetchedScans.length} ${t('recordsLabel', 'records')}`;
 
   scans.forEach(scan => {
     const tr = document.createElement('tr');
@@ -310,43 +331,43 @@ function renderRecentTable(scans) {
     const rawStatus = (scan.status || 'unknown').toLowerCase();
     let tagClass = 'tag-pass';
     let tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-    let statusText = 'COMPLIANT';
+    let statusText = t('stampPass', 'COMPLIANT');
 
     if (rawStatus === 'non-compliant' || rawStatus === 'fail') {
       tagClass = 'tag-fail';
       tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-      statusText = 'NON-COMPLIANT';
+      statusText = t('stampFail', 'NON-COMPLIANT');
     } else if (rawStatus === 'exempt') {
       tagClass = 'tag-exempt';
       tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
-      statusText = 'EXEMPT';
+      statusText = t('stampExempt', 'EXEMPT');
     } else if (rawStatus === 'uncertain') {
       tagClass = 'tag-uncertain';
       tagIcon = '<svg class="stamp-tag-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
-      statusText = 'UNCERTAIN';
+      statusText = t('stampUncertain', 'UNCERTAIN');
     }
 
     let fieldsDisplay = `${scan.fields_passed || 0}/${scan.fields_total || 5}`;
     if (rawStatus === 'exempt') {
-      fieldsDisplay = '<span style="color: var(--color-text-muted);">N/A (Exempt)</span>';
+      fieldsDisplay = `<span style="color: var(--color-text-muted);">${t('stampExempt', 'Exempt')}</span>`;
     } else if (scan.fields_passed === scan.fields_total && scan.fields_total > 0) {
       fieldsDisplay = `<span class="text-pass font-semibold">${fieldsDisplay} (100%)</span>`;
     } else {
       fieldsDisplay = `<span class="text-fail font-semibold">${fieldsDisplay}</span>`;
     }
 
-    let findingSummary = 'All 5 mandatory declarations verified';
+    let findingSummary = t('allMandatoryMet', 'All 5 mandatory declarations verified');
     if (rawStatus === 'exempt') {
-      findingSummary = 'Statutory exemption applied (Rule 3 / 26)';
+      findingSummary = t('statusExemptDesc', 'Statutory exemption applied (Rule 3 / 26)');
     } else if (rawStatus === 'uncertain') {
-      findingSummary = 'Low OCR confidence region detected (<60%)';
+      findingSummary = t('statusUncertainDesc', 'Low OCR confidence region detected (<60%)');
     } else if (rawStatus === 'non-compliant') {
       const results = scan.field_results || [];
       const failed = results.filter(f => f.status === 'FAIL' || f.status === 'WARNING' || f.status === 'FLAGGED').map(f => f.field_name);
       if (failed.length > 0) {
-        findingSummary = `Flagged: ${failed.join(', ')}`;
+        findingSummary = `${t('findingLabel', 'Flagged:')} ${failed.join(', ')}`;
       } else {
-        findingSummary = 'Mandatory declaration missing or flagged';
+        findingSummary = t('statusNonCompliantDesc', 'Mandatory declaration missing or flagged');
       }
     }
 
