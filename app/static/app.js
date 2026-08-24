@@ -12,6 +12,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAnalyzeText = document.getElementById('btnAnalyzeText');
   const scanningProgressCard = document.getElementById('scanningProgressCard');
 
+  // Input Mode Elements
+  const btnModeUpload = document.getElementById('btnModeUpload');
+  const btnModeCamera = document.getElementById('btnModeCamera');
+  const uploadViewContainer = document.getElementById('uploadViewContainer');
+  const cameraViewContainer = document.getElementById('cameraViewContainer');
+  const cameraVideo = document.getElementById('cameraVideo');
+  const cameraCanvas = document.getElementById('cameraCanvas');
+  const btnCapturePhoto = document.getElementById('btnCapturePhoto');
+  const btnSwitchCamera = document.getElementById('btnSwitchCamera');
+  const btnCancelCamera = document.getElementById('btnCancelCamera');
+
   const resultsSection = document.getElementById('resultsSection');
   const scanMetaText = document.getElementById('scanMetaText');
   const complianceSummaryBar = document.getElementById('complianceSummaryBar');
@@ -42,6 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentFile = null;
   let currentPresetText = null;
   let currentReport = null;
+  let mediaStream = null;
+  let currentFacingMode = 'environment';
 
   // SVG Line Icons (1.75px stroke, uniform clean style)
   const ICONS = {
@@ -56,11 +69,19 @@ document.addEventListener('DOMContentLoaded', () => {
     stampUncertain: '<svg class="stamp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
   };
 
-  // Preset definitions for fast hackathon demo testing
+  // Preset definitions for fast testing
   const PRESETS = {
     compliant: {
       title: "Standard Compliant Pack",
       text: "ORGANIC CASHEW NUTS\nNet Wt: 500 g\nMRP Rs. 650.00 (Incl. of all taxes)\nMFD: 10/2024\nManufactured & Packed by: Green Agro Foods Pvt Ltd, Plot 42, GIDC, Ahmedabad, Gujarat 382330\nConsumer Care Helpline: 1800-200-4567 | Email: care@greenagro.com"
+    },
+    dual_mrp: {
+      title: "Dual MRP Anomaly",
+      text: "CRUNCHY CHOCO COOKIES 200g\nMRP Rs.20 MRPRs.25*\nMFD: 09/2024\nPacked by: Sweet Bakes Ltd, Okhla Phase 3, New Delhi 110020\nConsumer Helpline: 1800-222-3333 | care@sweetbakes.in"
+    },
+    crunchy_bites: {
+      title: "Crunchy Bites (Dual MRP Anomaly)",
+      text: "CRUNCHY BITES CORN CHIPS\nNet Wt: 200 g\nMRP Rs.20 / MRPRs.25*\nMFD: 09/2024\nManufactured by: Sweet Bakes Ltd, Okhla Phase 3, New Delhi 110020\nCustomer Care: 1800-111-2222 | care@sweetbakes.in"
     },
     nutrition_panel: {
       title: "Nutrition Panel (Not Exempt)",
@@ -70,13 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
       title: "Non-Standard Unit ('gm')",
       text: "ROYAL CHAI MASALA\nNet Wt: 100 gm\nMRP Rs. 85.00\nMFD: 08/2024\nManufactured by: Spice Wonders Ltd, Andheri East, Mumbai 400069\nCustomer Care: 9820012345"
     },
-    dual_mrp: {
-      title: "Dual MRP Anomaly",
-      text: "CRUNCHY CHOCO COOKIES 200g\nMRP Rs. 100.00 (Incl. of all taxes)\nSpecial Price Sticker MRP Rs. 125.00 (revised mrp)\nMFD: 09/2024\nPacked by: Sweet Bakes Ltd, Okhla Phase 3, New Delhi 110020\nConsumer Helpline: care@sweetbakes.in"
-    },
     missing_fields: {
       title: "Missing Consumer Care Details",
-      text: "EXTRA VIRGIN MUSTARD OIL\nNet Volume: 1 L\nMRP Rs. 210.00\nMFD: 07/2024\nManufactured by: Shudh Oil Mills, Industrial Area, Jaipur, Rajasthan 302013\n(Consumer care details missing on label)"
+      text: "EXTRA VIRGIN MUSTARD OIL\nNet Volume: 1 L\nMRP Rs. 210.00\nMFD: 07/2024\nManufactured by: Shudh Oil Mills, Industrial Area, Jaipur, Rajasthan 302013"
     },
     exempt_bulk: {
       title: "Exempt Bulk 30kg Pack",
@@ -91,6 +108,96 @@ document.addEventListener('DOMContentLoaded', () => {
       text: "PREMIUM TOBACCO KHAINI\nNet Wt: 5 g\nMRP Rs. 20.00\nMFD: 09/2024\nManufactured by: Desi Tobacco Products, Kanpur, UP 208001\nConsumer Helpline: 9876543210"
     }
   };
+
+  // ==============================================================================
+  // INPUT MODE SWITCHING & CAMERA WORKFLOW
+  // ==============================================================================
+
+  btnModeUpload.addEventListener('click', () => {
+    btnModeUpload.classList.add('active');
+    btnModeCamera.classList.remove('active');
+    stopCamera();
+    cameraViewContainer.classList.add('hidden');
+    uploadViewContainer.classList.remove('hidden');
+  });
+
+  btnModeCamera.addEventListener('click', () => {
+    btnModeCamera.classList.add('active');
+    btnModeUpload.classList.remove('active');
+    uploadViewContainer.classList.add('hidden');
+    cameraViewContainer.classList.remove('hidden');
+    startCamera();
+  });
+
+  async function startCamera() {
+    stopCamera();
+    try {
+      const constraints = {
+        video: {
+          facingMode: currentFacingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      };
+      mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      cameraVideo.srcObject = mediaStream;
+    } catch (err) {
+      console.error('Camera access error:', err);
+      alert(`Camera could not be accessed (${err.name}: ${err.message}). Please check camera permissions or upload an image file.`);
+      btnModeUpload.click();
+    }
+  }
+
+  function stopCamera() {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(track => track.stop());
+      mediaStream = null;
+    }
+    if (cameraVideo) {
+      cameraVideo.srcObject = null;
+    }
+  }
+
+  btnSwitchCamera.addEventListener('click', () => {
+    currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+    startCamera();
+  });
+
+  btnCancelCamera.addEventListener('click', () => {
+    btnModeUpload.click();
+  });
+
+  btnCapturePhoto.addEventListener('click', () => {
+    if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+      alert('Camera video stream is not ready yet. Please wait a moment.');
+      return;
+    }
+
+    cameraCanvas.width = cameraVideo.videoWidth;
+    cameraCanvas.height = cameraVideo.videoHeight;
+    const ctx = cameraCanvas.getContext('2d');
+    ctx.drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
+
+    cameraCanvas.toBlob((blob) => {
+      if (!blob) {
+        alert('Failed to capture photo frame.');
+        return;
+      }
+      const capturedFile = new File([blob], `camera_scan_${Date.now()}.png`, { type: 'image/png' });
+      stopCamera();
+      cameraViewContainer.classList.add('hidden');
+      uploadViewContainer.classList.remove('hidden');
+      btnModeUpload.classList.add('active');
+      btnModeCamera.classList.remove('active');
+
+      handleFileSelection(capturedFile);
+    }, 'image/png');
+  });
+
+  // ==============================================================================
+  // FILE UPLOAD WORKFLOW
+  // ==============================================================================
 
   // Click to open file dialog window
   dropzone.addEventListener('click', (e) => {
@@ -141,13 +248,12 @@ document.addEventListener('DOMContentLoaded', () => {
     dropzonePrompt.classList.remove('hidden');
     btnAnalyze.disabled = true;
     clearActivePreset();
-    // Reopen file picker
     fileInput.click();
   });
 
   function handleFileSelection(file) {
     if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file (PNG, JPG, JPEG).');
+      alert('Please upload an image file (PNG, JPG, JPEG, WEBP).');
       return;
     }
     currentFile = file;
@@ -211,7 +317,10 @@ document.addEventListener('DOMContentLoaded', () => {
     presetButtons.forEach(b => b.classList.remove('active'));
   }
 
-  // Check Compliance Button
+  // ==============================================================================
+  // SCAN & ANALYSIS TRIGGER
+  // ==============================================================================
+
   btnAnalyze.addEventListener('click', async () => {
     if (!currentFile && !currentPresetText) return;
 
@@ -261,16 +370,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (resultsSection) resultsSection.classList.add('hidden');
     } else {
       btnAnalyze.disabled = false;
-      btnAnalyzeText.textContent = "Check Compliance";
+      btnAnalyzeText.textContent = "Scan Label & Check Compliance";
       if (scanningProgressCard) scanningProgressCard.classList.add('hidden');
     }
   }
 
-  // Render screening results
+  // ==============================================================================
+  // RENDER SCREENING RESULTS
+  // ==============================================================================
+
   function renderResults(report) {
     scanMetaText.innerHTML = `<strong>Scan Ref ID:</strong> <span class="ref-code">${escapeHtml(report.scan_id)}</span> &bull; <strong>Evaluated on:</strong> ${escapeHtml(report.timestamp)}`;
     
-    // 1. Compliance Summary Progress Bar (Signature Element 2: Ruler fill with single smooth needle transition)
+    // 1. Compliance Summary Progress Bar
     if (report.is_exempt) {
       if (summaryBarTitle) summaryBarTitle.textContent = "Statutory Exemption Applied (Rule 3 / Rule 26)";
       if (summaryBarPct) summaryBarPct.textContent = "EXEMPT";
@@ -286,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const totalFields = 5;
       const passedFields = (report.fields || []).filter(f => f.status === 'PASS').length;
       const hasUncertain = (report.fields || []).some(f => f.status === 'UNCERTAIN');
-      const hasWarning = (report.fields || []).some(f => f.status === 'WARNING');
+      const hasWarning = (report.fields || []).some(f => f.status === 'WARNING' || f.status === 'FLAGGED');
       const pct = Math.round((passedFields / totalFields) * 100);
 
       if (summaryBarTitle) summaryBarTitle.textContent = `Compliance Score: ${passedFields} of ${totalFields} Mandatory Declarations Verified`;
@@ -308,12 +420,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (passedFields === totalFields) {
           summaryHint.textContent = "All 5 mandatory statutory declarations satisfy Legal Metrology (Packaged Commodities) Rules, 2011 specifications.";
         } else {
-          summaryHint.textContent = `${totalFields - passedFields} mandatory declaration(s) are missing or non-compliant under Rule 6.`;
+          summaryHint.textContent = `${totalFields - passedFields} mandatory declaration(s) are missing, flagged, or non-compliant under Rule 6.`;
         }
       }
     }
 
-    // 2. Primary Compliance Verdict Banner (Dominant visual hierarchy)
+    // 2. Primary Compliance Verdict Banner
     statusBanner.className = 'status-banner';
     const overall = (report.overall_status || '').toUpperCase();
 
@@ -376,7 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
         stampClass = 'stamp-fail';
         statusCardClass = 'status-fail';
         stampIconSvg = ICONS.stampCross;
-      } else if (statusUpper === 'WARNING') {
+      } else if (statusUpper === 'WARNING' || statusUpper === 'FLAGGED') {
         stampClass = 'stamp-warning';
         statusCardClass = 'status-warning';
         stampIconSvg = ICONS.stampWarning;
@@ -396,14 +508,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const matchedHtml = field.matched_text 
-        ? `<div class="field-matched-text"><code>${escapeHtml(field.matched_text)}</code> ${confTagHtml}</div>` 
+        ? `<div class="field-matched-text"><strong>Detected Value:</strong> <code>${escapeHtml(field.matched_text)}</code> ${confTagHtml}</div>` 
         : `<div class="field-desc-text"><em>No matching declaration detected on label</em></div>`;
 
       const flagHtml = field.flag 
-        ? `<div class="field-flag-warning">${ICONS.warning} ${escapeHtml(field.flag)}</div>` 
+        ? `<div class="field-flag-warning">${ICONS.warning} <strong>Finding:</strong> ${escapeHtml(field.flag)}</div>` 
         : '';
 
-      const detailsHtml = `<div class="field-desc-text">${escapeHtml(field.details)}</div>`;
+      const detailsHtml = `<div class="field-desc-text"><strong>Explanation / Guidance:</strong> ${escapeHtml(field.details)}</div>`;
 
       // Official Stamped Seal Badge rendering
       card.innerHTML = `
@@ -440,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnExportPdf.disabled = true;
     const originalText = btnExportPdf.innerHTML;
-    btnAnalyzeText.textContent = 'Generating Calibration Report...';
+    btnExportPdf.innerHTML = '<span>Generating PDF Report...</span>';
 
     try {
       const response = await fetch('/api/export', {

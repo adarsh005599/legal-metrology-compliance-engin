@@ -1,0 +1,71 @@
+{
+  "sample1_compliant.png": {
+    "overall": "COMPLIANT",
+    "is_exempt": false,
+    "fields": {
+      "mrp": "PASS",
+      "net_quantity": "PASS",
+      "mfg_date": "PASS",
+      "address": "PASS",
+      "consumer_care": "PASS"
+    }
+  },
+  "sample2_non_standard_unit.png": {
+    "overall": "NON_COMPLIANT",
+    "is_exempt": false,
+    "fields": {
+      "mrp": "PASS",
+      "net_quantity": "FLAGGED",
+      "mfg_date": "PASS",
+      "address": "PASS",
+      "consumer_care": "PASS"
+    }
+  },
+  "sample3_dual_mrp.png": {
+    "overall": "NON_COMPLIANT",
+    "is_exempt": false,
+    "fields": {
+      "mrp": "FLAGGED",
+      "mfg_date": "PASS",
+      "address": "PASS",
+      "consumer_care": "PASS"
+    }
+  },
+  "sample4_missing_consumer_care.png": {
+    "overall": "NON_COMPLIANT",
+    "is_exempt": false,
+    "fields": {
+      "mrp": "PASS",
+      "net_quantity": "PASS",
+      "mfg_date": "PASS",
+      "address": "PASS",
+      "consumer_care": "FAIL"
+    }
+  },
+  "sample5_exempt_bulk_30kg.png": {
+    "overall": "EXEMPT",
+    "is_exempt": true
+  },
+  "sample6_tobacco_small.png": {
+    "overall": "COMPLIANT",
+    "is_exempt": false,
+    "fields": {
+      "mrp": "PASS",
+      "net_quantity": "PASS",
+      "mfg_date": "PASS",
+      "address": "PASS",
+      "consumer_care": "PASS"
+    }
+  },
+  "sample7_nutrition_table.png": {
+    "overall": "COMPLIANT",
+    "is_exempt": false,
+    "fields": {
+      "mrp": "PASS",
+      "net_quantity": "PASS",
+      "mfg_date": "PASS",
+      "address": "PASS",
+      "consumer_care": "PASS"
+    }
+  }
+}

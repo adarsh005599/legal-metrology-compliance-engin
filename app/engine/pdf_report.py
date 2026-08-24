@@ -203,7 +203,7 @@ def generate_pdf_report(report: ComplianceReport) -> bytes:
         for field in report.fields:
             if field.status == "PASS":
                 status_html = "<font color='#27AE60'><b>PASS</b></font>"
-            elif field.status == "WARNING":
+            elif field.status in {"WARNING", "FLAGGED"}:
                 status_html = "<font color='#D69E2E'><b>FLAGGED</b></font>"
             elif field.status == "UNCERTAIN":
                 status_html = "<font color='#D97706'><b>UNCERTAIN</b></font>"

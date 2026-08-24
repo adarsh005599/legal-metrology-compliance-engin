@@ -31,8 +31,15 @@ class TestEndToEndPipeline(unittest.TestCase):
         else:
             fields = evaluate_all_rules(text_lines)
             has_fail = any(f.status == "FAIL" for f in fields)
-            has_warn = any(f.status == "WARNING" for f in fields)
-            overall_status = "NON_COMPLIANT" if (has_fail or has_warn) else "COMPLIANT"
+            has_warn = any(f.status in {"WARNING", "FLAGGED"} for f in fields)
+            has_uncertain = any(f.status == "UNCERTAIN" for f in fields)
+
+            if has_fail or has_warn:
+                overall_status = "NON_COMPLIANT"
+            elif has_uncertain:
+                overall_status = "UNCERTAIN"
+            else:
+                overall_status = "COMPLIANT"
 
             report = ComplianceReport(
                 scan_id="LM-TEST-SCAN",
@@ -65,20 +72,22 @@ class TestEndToEndPipeline(unittest.TestCase):
         # Net quantity must be flagged for "gm"
         net_qty = next(f for f in report.fields if f.field_id == "net_quantity")
         self.assertTrue(net_qty.found)
-        self.assertEqual(net_qty.status, "WARNING")
+        self.assertEqual(net_qty.status, "FLAGGED")
         self.assertIn("Non-standard unit", net_qty.flag)
 
     def test_sample3_dual_mrp(self):
         report = self.run_image_pipeline("test_samples/sample3_dual_mrp.png")
         self.assertFalse(report.is_exempt)
+        self.assertEqual(report.overall_status, "NON_COMPLIANT")
         mrp_field = next(f for f in report.fields if f.field_id == "mrp")
         self.assertTrue(mrp_field.found)
-        self.assertEqual(mrp_field.status, "WARNING")
-        self.assertIn("Dual Pricing", mrp_field.flag)
+        self.assertEqual(mrp_field.status, "FLAGGED")
+        self.assertTrue("Dual pricing" in mrp_field.flag or "Price sticker" in mrp_field.flag or "alteration" in mrp_field.flag)
 
     def test_sample4_missing_consumer_care(self):
         report = self.run_image_pipeline("test_samples/sample4_missing_consumer_care.png")
         self.assertFalse(report.is_exempt)
+        self.assertEqual(report.overall_status, "NON_COMPLIANT")
         care_field = next(f for f in report.fields if f.field_id == "consumer_care")
         self.assertFalse(care_field.found)
         self.assertEqual(care_field.status, "FAIL")
@@ -91,7 +100,6 @@ class TestEndToEndPipeline(unittest.TestCase):
 
     def test_sample6_tobacco_small_not_exempt(self):
         report = self.run_image_pipeline("test_samples/sample6_tobacco_small.png")
-        # Tobacco <= 10g is NOT exempt under Rule 26
         self.assertFalse(report.is_exempt)
         self.assertEqual(report.overall_status, "COMPLIANT")
 
