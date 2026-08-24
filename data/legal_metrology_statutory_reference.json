@@ -1,0 +1,202 @@
+{
+  "project_metadata": {
+    "sih_year": "2026",
+    "problem_statement": "26034",
+    "theme": "Agriculture, FoodTech & Rural Development",
+    "ministry": "Ministry of Consumer Affairs, Food & Public Distribution",
+    "title": "Legal Metrology AI Compliance Engine — Statutory Framework & Legal Data Reference",
+    "framing": "Pre-Inspection Compliance-Assist Screening Engine (Evidence-backed advisory tool, not a statutory notice)"
+  },
+  "four_governing_legal_regimes": [
+    {
+      "layer": 1,
+      "statute": "Legal Metrology Act, 2009 (Act No. 1 of 2010)",
+      "scope": "The parent statute governing weights, measures, standards, enforcement powers, offences, compounding, and penalties.",
+      "key_sections": {
+        "section_15": "Power of inspection, search, seizure. Strictly reserved for Director, Controller, or Legal Metrology Officers.",
+        "section_18": "Mandatory compliance for pre-packaged commodities (no sale unless declarations conform).",
+        "section_36_1": "Penalty for non-conforming declarations (1st offence: up to ₹25,000; 2nd: up to ₹50,000; Subsequent: ₹50,000–₹1,00,000 and/or 1 yr imprisonment).",
+        "section_36_2": "Penalty for error in net quantity (1st offence: ₹10,000–₹50,000; Subsequent: up to ₹1,00,000 and/or 1 yr imprisonment).",
+        "section_53": "Compounding of offences — Director/Controller may compound offences before or after institution of prosecution."
+      }
+    },
+    {
+      "layer": 2,
+      "statute": "Legal Metrology (Packaged Commodities) Rules, 2011 (PC Rules)",
+      "scope": "The specific labelling and packaging standards checked by the engine against package labels.",
+      "key_rules": {
+        "rule_3": "Exemption conditions for packages > 25 kg/L, industrial/institutional, agricultural farm produce.",
+        "rule_6": "Mandatory declarations on retail pre-packaged commodities.",
+        "rule_26": "Specific exemptions including <= 10 g/ml packages (excluding tobacco products).",
+        "rule_32": "Prohibition of altering/erasing MRP and selling above declared MRP."
+      }
+    },
+    {
+      "layer": 3,
+      "statute": "FSSAI (Labelling & Display) Regulations, 2020",
+      "scope": "Food-specific labelling running in parallel to PC Rules for food commodities.",
+      "governed_fields": [
+        "Ingredient list",
+        "Nutritional information panel (per 100g/serving)",
+        "Allergen declarations",
+        "FSSAI 14-digit license number and logo",
+        "Veg / Non-Veg logo (green/brown dot in square)",
+        "Best-before / Expiry date"
+      ],
+      "demarcation": "A food product can pass FSSAI and fail Legal Metrology (or vice versa). FSSAI is a distinct parallel layer scoped separately from Legal Metrology PC Rules."
+    },
+    {
+      "layer": 4,
+      "statute": "Digital Personal Data Protection Act, 2023 (DPDP Act)",
+      "scope": "Governs data collected by the application (photos of labels, addresses, phone numbers, officer user accounts).",
+      "obligations": [
+        "Data Fiduciary responsibilities upon collecting user or business identifiable data",
+        "Purpose limitation (processing strictly for compliance audit)",
+        "Clear-language privacy notice & consent mechanism",
+        "No unnecessary data retention beyond audit session",
+        "Enforced independently by the Data Protection Board of India"
+      ]
+    }
+  ],
+  "rule_6_mandatory_declarations": [
+    {
+      "id": "rule_6_1_a",
+      "field_name": "Name and Complete Address of Manufacturer / Packer / Importer",
+      "statutory_rule": "Rule 6(1)(a)",
+      "legal_requirements": "Complete name and address where the commodity is manufactured, packed, or imported. If manufacturer and packer are different, both or the packer must be clearly declared.",
+      "explanation_ii_rule": "Under Explanation II to Rule 6, if a brand owner/marketer appears differently from manufacturer, liability attaches to whoever is named FIRST on the label."
+    },
+    {
+      "id": "rule_6_1_b",
+      "field_name": "Common or Generic Name of Commodity",
+      "statutory_rule": "Rule 6(1)(b)",
+      "legal_requirements": "Generic name of commodity. If package contains two or more components/items, the declaration must state the separate components and quantities."
+    },
+    {
+      "id": "rule_6_1_c",
+      "field_name": "Net Quantity in Standard SI Units",
+      "statutory_rule": "Rule 6(1)(c)",
+      "legal_requirements": "Net quantity in standard SI symbols: Weight in 'g', 'kg'; Volume in 'ml', 'l' / 'L'; or piece count 'N' / 'U'. Non-standard units like 'gm', 'gms', 'ML', 'kilo' are non-compliant."
+    },
+    {
+      "id": "rule_6_1_d",
+      "field_name": "Month and Year of Manufacture / Packing / Import",
+      "statutory_rule": "Rule 6(1)(d)",
+      "legal_requirements": "Month and year of manufacture, packing, or pre-packing (e.g. MM/YYYY or Month YYYY)."
+    },
+    {
+      "id": "rule_6_1_e",
+      "field_name": "Maximum Retail Price (MRP)",
+      "statutory_rule": "Rule 6(1)(e) & Rule 32",
+      "legal_requirements": "Must say 'MRP Rs. ___ / ₹ ___ (inclusive of all taxes)' or 'MRP Rs. ___ / ₹ ___ (incl. of all taxes)'. Dual pricing stickers, smudging, or price alteration is strictly prohibited."
+    },
+    {
+      "id": "rule_6_1_f",
+      "field_name": "Consumer Care Details",
+      "statutory_rule": "Rule 6(1)(f)",
+      "legal_requirements": "Name, address, telephone number, and email address of the person or office that can be reached in case of consumer complaints."
+    },
+    {
+      "id": "rule_6_1_g",
+      "field_name": "Unit Sale Price (USP)",
+      "statutory_rule": "Rule 6(1)(g) [2021 Amendment, in force from 1 Jan 2024]",
+      "legal_requirements": "Price per unit of measure (e.g. ₹/g, ₹/kg, ₹/ml, ₹/l, ₹/piece) for packages > 1kg/1L. Not required if MRP equals unit sale price (e.g. 1 unit pack)."
+    },
+    {
+      "id": "rule_6_1_h",
+      "field_name": "Country of Origin",
+      "statutory_rule": "Rule 6(1)(h)",
+      "legal_requirements": "Country of origin must be prominently declared for all imported packages."
+    }
+  ],
+  "statutory_exemptions_rule_3_and_26": [
+    {
+      "exemption_type": "Bulk Packages (>25kg / >25L)",
+      "statutory_basis": "Rule 3(a)",
+      "threshold": "Net weight > 25 kg or volume > 25 litres (except cement and fertiliser which are exempt above 50 kg).",
+      "system_action": "Mark as STATUTORY EXEMPT; waive retail declaration checks."
+    },
+    {
+      "exemption_type": "Agricultural Produce Bulk",
+      "statutory_basis": "Rule 3(b)",
+      "threshold": "Agricultural farm produce packed in packages above 50 kg.",
+      "system_action": "Mark as STATUTORY EXEMPT."
+    },
+    {
+      "exemption_type": "Industrial & Institutional Consumers",
+      "statutory_basis": "Rule 3(c)",
+      "threshold": "Packages marked 'Not for retail sale' meant for institutional/industrial consumption (hotels, hospitals, railways, airlines).",
+      "system_action": "Mark as STATUTORY EXEMPT."
+    },
+    {
+      "exemption_type": "Small Packages (<= 10g / <= 10ml)",
+      "statutory_basis": "Rule 26(a)",
+      "threshold": "Net quantity is 10 g / 10 ml or less. CRITICAL EXCEPTION: Tobacco products are NEVER exempt even at <= 10g.",
+      "system_action": "Check for tobacco keywords ('tobacco', 'gutkha', 'khaini', 'pan masala', 'bidi', 'cigarette'). If tobacco, DO NOT EXEMPT. If non-tobacco, mark STATUTORY EXEMPT."
+    },
+    {
+      "exemption_type": "Immediate Fast Food / Hotel Consumption",
+      "statutory_basis": "Rule 26(b)",
+      "threshold": "Fast food packed by a restaurant or hotel for immediate customer consumption.",
+      "system_action": "Mark as STATUTORY EXEMPT."
+    },
+    {
+      "exemption_type": "Drugs & Formulations under DPCO",
+      "statutory_basis": "Rule 26(c)",
+      "threshold": "Scheduled and non-scheduled drug formulations regulated under Drugs (Price Control) Orders.",
+      "system_action": "Mark as STATUTORY EXEMPT."
+    },
+    {
+      "exemption_type": "Loose Garments / Hosiery",
+      "statutory_basis": "Rule 26 (2022 Amendment)",
+      "threshold": "Loose garments and hosiery sold openly for consumer physical inspection prior to purchase.",
+      "system_action": "Mark as STATUTORY EXEMPT / reduced declaration set."
+    }
+  ],
+  "enforcement_authority_and_case_law": {
+    "governing_sections": "Legal Metrology Act, 2009 — Section 15 (Powers of Director, Controller, and Officers)",
+    "supreme_court_benchmark": {
+      "case_citation": "ITC Ltd. v. State of Karnataka (2025 INSC 1111)",
+      "ruling_principle": "A Legal Metrology Officer cannot search or seize without a valid warrant and recorded 'reasons to believe'. Officers must strictly adhere to Code of Criminal Procedure (CrPC) safeguards, including two independent witnesses. Seizures violating due-process are quashed.",
+      "relevance_to_ai_engine": "Demonstrates that even designated government officers cannot casually issue binding enforcement notices. An AI system has zero statutory appointment and cannot issue legal notices. The tool MUST be framed as a pre-inspection evidence-screening assistant."
+    }
+  },
+  "penalties_matrix": [
+    {
+      "offence": "Non-conforming declaration on package",
+      "provision": "Section 36(1)",
+      "first_offence": "Fine up to ₹25,000",
+      "second_offence": "Fine up to ₹50,000",
+      "subsequent_offence": "Fine ₹50,000–₹1,00,000 and/or imprisonment up to 1 year",
+      "is_compoundable": true,
+      "compounding_section": "Section 53"
+    },
+    {
+      "offence": "Error in net quantity / short measure",
+      "provision": "Section 36(2)",
+      "first_offence": "Fine ₹10,000–₹50,000",
+      "second_offence": "—",
+      "subsequent_offence": "Fine up to ₹1,00,000 and/or imprisonment up to 1 year",
+      "is_compoundable": true,
+      "compounding_section": "Section 53"
+    },
+    {
+      "offence": "Selling above Maximum Retail Price (MRP)",
+      "provision": "Section 36(2) / Rule 32(2)",
+      "first_offence": "Fine up to ₹2,000",
+      "second_offence": "—",
+      "subsequent_offence": "—",
+      "is_compoundable": true,
+      "compounding_section": "Section 53"
+    },
+    {
+      "offence": "Altering or erasing MRP / price stickers",
+      "provision": "Rule 32",
+      "first_offence": "Fine up to ₹2,000",
+      "second_offence": "—",
+      "subsequent_offence": "—",
+      "is_compoundable": true,
+      "compounding_section": "Section 53"
+    }
+  ]
+}
