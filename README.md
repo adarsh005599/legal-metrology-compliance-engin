@@ -1,3 +1,14 @@
+---
+title: Legal Metrology Compliance Assist Engine
+emoji: ⚖️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+---
+
 # Legal Metrology Compliance-Assist Engine
 **Smart India Hackathon (SIH PS-26034)**  
 *Target Ministry: Ministry of Consumer Affairs, Food & Public Distribution*
@@ -58,91 +69,32 @@ Evaluated **before** rule checking under Rule 3 and Rule 26:
 - **Condition 4**: Openly sold / loose goods weighed at counter.
 
 ### 3. Rule Engine — 5 Mandatory Fields (`app/engine/rules.py`)
-- **Field 1: MRP**: Regex validation for rupee pricing near MRP keywords. Flags dual pricing and price-sticker alteration anomalies.
-- **Field 2: Net Quantity**: Standard SI unit validation (`g`, `kg`, `ml`, `l`). Non-standard units (`gm`, `gms`, `ltr`) are flagged with a warning rather than rejected.
-- **Field 3: Month & Year of Mfg/Packing**: Regex matching for date patterns near `mfg`, `mfd`, `pkd`, `packed`.
-- **Field 4: Manufacturer / Packer Address**: Matches `mfd by`, `marketed by`, `packed by` followed by address text.
-- **Field 5: Consumer Care Details**: Matches 10-digit telephone numbers, toll-free lines (`1800-xxx-xxxx`), or email addresses.
-
-### 4. PDF Report Generation (`app/engine/pdf_report.py`)
-- Generates downloadable `Compliance_Assist_Report_<ScanID>.pdf` using **ReportLab**.
-- Formatted with Ministry styling, scan metadata, exemption status, 5-field compliance table, OCR preview, and statutory Section 15 disclaimer box.
-
-### 5. Frontend (`app/static/`)
-- Single-page application with drag-and-drop file upload, live image preview, and 1-click test presets for hackathon demonstrations.
-- Visual badges: **PASS (Green)**, **FAIL (Red)**, **FLAGGED (Amber)**, **EXEMPT (Blue)**.
-- Direct PDF report export button.
+1. **Maximum Retail Price (MRP)**: Matches `MRP`, `M.R.P.`, `Maximum Retail Price` followed by a valid Indian rupee amount on the same or adjacent line. Flags dual-pricing contradictions and price stickers.
+2. **Net Quantity**: Matches net quantity with valid standard SI units (`g`, `kg`, `ml`, `l`). Flags non-standard units (e.g. `gm`, `gms`).
+3. **Date of Manufacture / Packing**: Validates month/year formats (`MM/YYYY`, `MM/YY`, `MMM YYYY`).
+4. **Manufacturer / Packer Name & Address**: Validates postal keywords, pin codes, and multi-line addresses.
+5. **Consumer Care Details**: Validates phone numbers, helplines, email addresses, and grievance contacts.
 
 ---
 
 ## 🛠️ Tech Stack
-- **Backend**: Python 3.10+, FastAPI, Uvicorn
-- **OCR**: PaddleOCR, PaddlePaddle
-- **PDF Engine**: ReportLab
-- **Frontend**: Vanilla HTML5, CSS3, JavaScript (no complex build step required)
-- **Validation**: Pydantic v2
+- **Backend**: FastAPI, Uvicorn, Pydantic v2
+- **OCR Engine**: PaddleOCR v2.7+ (CPU optimized)
+- **Database & Sync**: Supabase PostgreSQL + Fallback In-Memory Buffer
+- **PDF Report Generation**: ReportLab
+- **Frontend**: Responsive HTML5, Vanilla JavaScript, Chart.js, Custom CSS
 
 ---
 
-## ⚙️ Installation & Setup
+## 🏁 Quickstart
 
-### 1. Clone or Open Workspace
-```bash
-cd "Legal Metrology Compliance-Assist Engine"
-```
-
-### 2. Install Dependencies
-```bash
+```powershell
+# 1. Install dependencies
 pip install -r requirements.txt
-```
 
-### 3. Start the Web Application
-```bash
+# 2. Run backend server
 uvicorn main:app --reload
+
+# 3. Open browser
+http://127.0.0.1:8000
 ```
-
-### 4. Open in Browser
-Visit **[http://127.0.0.1:8000](http://127.0.0.1:8000)** in any web browser.
-
----
-
-## 🧪 Running Unit Tests & Batch Self-Test
-
-### Run Automated Unit & Integration Tests:
-```bash
-python -m unittest discover -s tests
-```
-
-### Run Batch Self-Test Suite on `/data/sample_labels`:
-```bash
-python scripts/batch_test.py data/sample_labels
-```
-*(Prints a full summary table and exports results to `batch_test_results.csv`)*
-
----
-
-## 📡 API Reference
-
-### `POST /api/scan`
-- **Payload**: `multipart/form-data` with `file: <image file>`
-- **Response**: `ComplianceReport` JSON object
-
-### `POST /api/scan-text`
-- **Payload**: `{"text": "...", "filename": "sample.jpg"}`
-- **Response**: `ComplianceReport` JSON object (for headless evaluation/testing)
-
-### `POST /api/export`
-- **Payload**: `ComplianceReport` JSON object
-- **Response**: Binary stream of PDF document (`application/pdf`)
-
----
-
-## 🚫 Explicit Out-of-Scope (MVP Scope Boundaries)
-The following items are intentionally excluded from this hackathon MVP and listed for future work:
-- Unit sale price (USP) calculation
-- Country of origin declaration check
-- Font size / legibility / aspect ratio measurement
-- FSSAI license / food safety declarations
-- Multi-photo 360-degree bottle stitching
-- Cloud/local Large Language Model (LLM) pipelines (pure deterministic regex used)
-- User authentication and persistent databases
