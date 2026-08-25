@@ -127,7 +127,7 @@ async def scan_label(file: UploadFile = File(...)):
         return report
 
     # 3. Rule Engine: 5 Mandatory Declaration Fields with OCR confidence auditing
-    fields = evaluate_all_rules(ocr_lines, extended=True)
+    fields = evaluate_all_rules(ocr_lines, extended=False)
     
     # Overall status determination:
     has_failure = any(f.status == "FAIL" for f in fields)
@@ -200,7 +200,7 @@ async def scan_raw_text(payload: dict = Body(...)):
             logger.warning(f"Non-blocking DB write error: {db_err}")
         return report
 
-    fields = evaluate_all_rules(text_lines, extended=True)
+    fields = evaluate_all_rules(text_lines, extended=False)
     has_failure = any(f.status == "FAIL" for f in fields)
     has_warning = any(f.status in {"WARNING", "FLAGGED"} for f in fields)
     has_uncertain = any(f.status == "UNCERTAIN" for f in fields)
@@ -257,6 +257,129 @@ async def api_scans_recent(limit: int = 20):
         return []
 
 
+# ==============================================================================
+# ADMIN & STATUTORY COMPLIANCE PANEL ENDPOINTS
+# ==============================================================================
+from app.engine import admin_manager
+
+@app.post("/api/admin/login")
+async def api_admin_login(payload: Dict[str, Any] = Body(...)):
+    """
+    Validates officer admin login credentials (email & password).
+    """
+    email = payload.get("email", "")
+    password = payload.get("password", "")
+    user_session = admin_manager.verify_admin_login(email, password)
+    if not user_session:
+        raise HTTPException(status_code=401, detail="Invalid Officer Email or Password.")
+    return {"status": "success", "session": user_session}
+
+@app.get("/api/admin/violations")
+async def api_admin_violations(limit: int = 100):
+    """
+    Returns all raised statutory violations from inspection screening scans.
+    """
+    try:
+        return admin_manager.get_raised_violations(limit=limit)
+    except Exception as e:
+        logger.error(f"Error fetching violations: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.patch("/api/admin/violations/{scan_id}")
+async def api_admin_update_violation(
+    scan_id: str,
+    payload: Dict[str, Any] = Body(...)
+):
+    """
+    Updates the action status (e.g. DRAFT_NOTICE, ESCALATED, RESOLVED) for a raised violation.
+    """
+    try:
+        new_status = payload.get("status", "PENDING_REVIEW")
+        officer_notes = payload.get("officer_notes")
+        officer_name = payload.get("assigned_officer")
+        updated = admin_manager.update_violation_status(
+            scan_id=scan_id,
+            new_status=new_status,
+            officer_notes=officer_notes,
+            officer_name=officer_name
+        )
+        return {"status": "success", "scan_id": scan_id, "action": updated}
+    except Exception as e:
+        logger.error(f"Error updating violation {scan_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/admin/rules")
+async def api_admin_get_rules():
+    """
+    Returns all statutory Legal Metrology rules and governing standards.
+    """
+    try:
+        return admin_manager.get_all_rules()
+    except Exception as e:
+        logger.error(f"Error fetching rules: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/api/admin/rules/{rule_id}")
+async def api_admin_update_rule(
+    rule_id: str,
+    payload: Dict[str, Any] = Body(...)
+):
+    """
+    Updates statutory rule descriptions, legal standards, or penalty brackets.
+    """
+    try:
+        updated = admin_manager.update_rule(rule_id, payload)
+        if not updated:
+            raise HTTPException(status_code=404, detail=f"Rule with ID '{rule_id}' not found.")
+        return {"status": "success", "rule": updated}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating rule {rule_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/rules")
+async def api_admin_add_rule(payload: Dict[str, Any] = Body(...)):
+    """
+    Adds a new statutory rule or regulatory standard.
+    """
+    try:
+        new_rule = admin_manager.add_rule(payload)
+        return {"status": "success", "rule": new_rule}
+    except Exception as e:
+        logger.error(f"Error adding rule: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/admin/amendments")
+async def api_admin_get_amendments():
+    """
+    Returns all official regulatory gazette amendments and circulars.
+    """
+    try:
+        return admin_manager.get_all_amendments()
+    except Exception as e:
+        logger.error(f"Error fetching amendments: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/amendments")
+async def api_admin_add_amendment(payload: Dict[str, Any] = Body(...)):
+    """
+    Publishes a new regulatory amendment or gazette circular.
+    """
+    try:
+        new_amd = admin_manager.add_amendment(payload)
+        return {"status": "success", "amendment": new_amd}
+    except Exception as e:
+        logger.error(f"Error publishing amendment: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/export")
 async def export_pdf_report(report: ComplianceReport):
     """
@@ -299,3 +422,11 @@ async def read_dashboard():
     if os.path.exists(dashboard_file):
         return FileResponse(dashboard_file)
     return {"message": "Dashboard page not found in app/static/dashboard.html."}
+
+
+@app.get("/admin")
+async def read_admin():
+    admin_file = os.path.join(static_dir, "admin.html")
+    if os.path.exists(admin_file):
+        return FileResponse(admin_file)
+    return {"message": "Admin page not found in app/static/admin.html."}

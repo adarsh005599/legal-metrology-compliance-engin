@@ -67,6 +67,13 @@ def run_tests():
         assert "MetraSetu" in html
         assert "scanSearchInput" in html
 
+    res, body = test_endpoint("Admin & Compliance Panel Page", "GET", "/admin")
+    results.append(("Admin Page (/admin)", res))
+    if res:
+        html = body.decode('utf-8')
+        assert "MetraSetu" in html
+        assert "violationsTableBody" in html
+
     # 2. Test Static Assets
     res, _ = test_endpoint("CSS Stylesheet", "GET", "/static/style.css")
     results.append(("style.css", res))
@@ -80,8 +87,14 @@ def run_tests():
     res, _ = test_endpoint("Dashboard JS", "GET", "/static/dashboard.js")
     results.append(("dashboard.js", res))
 
+    res, _ = test_endpoint("Admin JS", "GET", "/static/admin.js")
+    results.append(("admin.js", res))
+
     res, _ = test_endpoint("Local Chart.js Bundle", "GET", "/static/chart.umd.min.js")
     results.append(("chart.umd.min.js", res))
+
+    res, _ = test_endpoint("Chatbot Widget JS", "GET", "/static/chatbot.js")
+    results.append(("chatbot.js", res))
 
     # 3. Test Telemetry API Endpoints
     res, body = test_endpoint("Scans Summary API", "GET", "/api/scans/summary")
@@ -95,6 +108,35 @@ def run_tests():
     if res:
         recent = json.loads(body.decode('utf-8'))
         print(f"    -> Recent Scans Count: {len(recent)}")
+
+    # 3b. Test Admin Login & Statutory Rules APIs
+    login_payload = json.dumps({
+        "email": "admin@metrasetu.gov.in",
+        "password": "MetraAdmin@2026"
+    }).encode('utf-8')
+    res, body = test_endpoint("Admin Login API", "POST", "/api/admin/login", data=login_payload, headers={'Content-Type': 'application/json'})
+    results.append(("API: /api/admin/login", res))
+    if res:
+        login_res = json.loads(body.decode('utf-8'))
+        print(f"    -> Login Success: {login_res.get('session', {}).get('name')}")
+
+    res, body = test_endpoint("Admin Violations API", "GET", "/api/admin/violations")
+    results.append(("API: /api/admin/violations", res))
+    if res:
+        violations = json.loads(body.decode('utf-8'))
+        print(f"    -> Raised Violations Count: {len(violations)}")
+
+    res, body = test_endpoint("Admin Statutory Rules API", "GET", "/api/admin/rules")
+    results.append(("API: /api/admin/rules", res))
+    if res:
+        rules = json.loads(body.decode('utf-8'))
+        print(f"    -> Active Rules Count: {len(rules)}")
+
+    res, body = test_endpoint("Admin Amendments API", "GET", "/api/admin/amendments")
+    results.append(("API: /api/admin/amendments", res))
+    if res:
+        amendments = json.loads(body.decode('utf-8'))
+        print(f"    -> Gazette Amendments Count: {len(amendments)}")
 
     # 4. Test Text Scanning Endpoint (/api/scan-text)
     # Test A: Compliant Pack

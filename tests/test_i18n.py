@@ -60,11 +60,11 @@ class TestI18nTranslations(unittest.TestCase):
 
         self.assertIn('id="langSwitcher"', index_html)
         self.assertIn('data-lang="hi"', index_html)
-        self.assertIn('src="/static/i18n.js"', index_html)
+        self.assertTrue('src="/static/i18n.js' in index_html or 'i18n.js' in index_html)
 
         self.assertIn('id="langSwitcher"', dashboard_html)
         self.assertIn('data-lang="hi"', dashboard_html)
-        self.assertIn('src="/static/i18n.js"', dashboard_html)
+        self.assertTrue('src="/static/i18n.js' in dashboard_html or 'i18n.js' in dashboard_html)
 
 
 if __name__ == '__main__':

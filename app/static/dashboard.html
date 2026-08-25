@@ -13,41 +13,50 @@
   <!-- Local self-hosted Chart.js for analytics visualization (no external CDN / Cloudflare dependency) -->
   <script src="/static/chart.umd.min.js"></script>
 </head>
-<body>
+<body class="instrument-theme">
 
-  <!-- Official Ministry Header -->
-  <header class="app-header">
-    <div class="header-container">
-      <a href="/" class="brand">
-        <!-- Clean Line-Style Scales of Justice SVG Emblem -->
-        <svg class="gov-emblem-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3v18"/>
-          <path d="M6 7l6-2 6 2"/>
-          <path d="M6 7l-3 7h6l-3-7z"/>
-          <path d="M18 7l-3 7h6l-3-7z"/>
-          <path d="M4 21h16"/>
-        </svg>
+  <!-- Instrument Top Bar -->
+  <header class="instrument-header">
+    <div class="container header-container">
+      <div class="header-brand">
+        <div class="brand-insignia">
+          <!-- Official Scale & Calibration Insignia SVG -->
+          <svg class="insignia-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v18"/>
+            <path d="M6 7l6-4 6 4"/>
+            <path d="M4 14l4-7 4 7H4z"/>
+            <path d="M16 14l4-7 4 7h-8z"/>
+            <circle cx="12" cy="21" r="1.5"/>
+          </svg>
+        </div>
         <div class="brand-text">
           <div class="brand-dept" data-i18n="ministryDept">Ministry of Consumer Affairs &bull; Legal Metrology Division</div>
           <h1 class="brand-main-title" data-i18n="brandMainTitle">MetraSetu</h1>
           <p class="brand-sub-title" data-i18n="brandSubTitle">Legal Metrology Compliance Assistant</p>
         </div>
-      </a>
-      <nav class="nav-links">
+      </div>
+      <nav class="header-nav">
         <a href="/" class="nav-link">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
           </svg>
-          <span data-i18n="navLabelScanner">Label Scanner</span>
+          <span data-i18n="navScanLabel">Screen Label</span>
         </a>
         <a href="/dashboard" class="nav-link active">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <line x1="3" y1="9" x2="21" y2="9"/>
-            <line x1="9" y1="21" x2="9" y2="9"/>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
           </svg>
-          <span data-i18n="navAnalytics">Analytics Dashboard</span>
+          <span data-i18n="navDashboard">Screening Dashboard</span>
+        </a>
+        <a href="/admin" class="nav-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span data-i18n="navAdminPanel">Admin Compliance Panel</span>
         </a>
 
         <!-- Bilingual Language Switcher (EN | हिन्दी) -->
@@ -59,7 +68,7 @@
     </div>
   </header>
 
-  <!-- Statutory Disclaimer Notice -->
+  <!-- Mandatory Statutory Notice Banner -->
   <div class="disclaimer-banner">
     <div class="container disclaimer-content">
       <svg class="disclaimer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -67,9 +76,9 @@
         <line x1="12" y1="16" x2="12" y2="12"/>
         <line x1="12" y1="8" x2="12.01" y2="8"/>
       </svg>
-      <p class="disclaimer-text">
+      <span class="disclaimer-text">
         <strong data-i18n="statutoryNoticeLabel">Statutory Notice:</strong> <span data-i18n="dashboardStatutoryNotice">This dashboard displays automated pre-inspection compliance screening records. It does not constitute a statutory enforcement log or notice under Section 15 of the Legal Metrology Act, 2009.</span>
-      </p>
+      </span>
     </div>
   </div>
 
@@ -253,7 +262,8 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="/static/i18n.js?v=2.2"></script>
-  <script src="/static/dashboard.js?v=2.2"></script>
+  <script src="/static/i18n.js?v=2.5"></script>
+  <script src="/static/dashboard.js?v=2.5"></script>
+  <script src="/static/chatbot.js?v=2.5"></script>
 </body>
 </html>

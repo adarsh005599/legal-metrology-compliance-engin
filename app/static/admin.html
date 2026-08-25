@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="adminPageTitle">MetraSetu — Admin & Statutory Compliance Panel</title>
+  
+  <!-- Typography Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Liquid Glass Theme Stylesheet -->
+  <link rel="stylesheet" href="/static/style.css?v=2.4">
+</head>
+<body class="instrument-theme">
+
+  <!-- Instrument Top Bar -->
+  <header class="instrument-header">
+    <div class="container header-container">
+      <div class="header-brand">
+        <div class="brand-insignia">
+          <!-- Official Scale & Calibration Insignia SVG -->
+          <svg class="insignia-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v18"/>
+            <path d="M6 7l6-4 6 4"/>
+            <path d="M4 14l4-7 4 7H4z"/>
+            <path d="M16 14l4-7 4 7h-8z"/>
+            <circle cx="12" cy="21" r="1.5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-dept" data-i18n="ministryDept">Ministry of Consumer Affairs &bull; Legal Metrology Division</div>
+          <h1 class="brand-main-title" data-i18n="brandMainTitle">MetraSetu</h1>
+          <p class="brand-sub-title" data-i18n="brandSubTitle">Legal Metrology Compliance Assistant</p>
+        </div>
+      </div>
+      <nav class="header-nav">
+        <a href="/" class="nav-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <span data-i18n="navScanLabel">Screen Label</span>
+        </a>
+        <a href="/dashboard" class="nav-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          <span data-i18n="navDashboard">Screening Dashboard</span>
+        </a>
+        <a href="/admin" class="nav-link active">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span data-i18n="navAdminPanel">Admin Compliance Panel</span>
+        </a>
+
+        <!-- Bilingual Language Switcher (EN | हिन्दी) -->
+        <div class="lang-switcher" id="langSwitcher" role="group" aria-label="Language Selector">
+          <button type="button" class="btn-lang active" data-lang="en" aria-label="English">EN</button>
+          <button type="button" class="btn-lang" data-lang="hi" aria-label="Hindi">हिन्दी</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Mandatory Statutory Notice Banner -->
+  <div class="disclaimer-banner">
+    <div class="container disclaimer-content">
+      <svg class="disclaimer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+      <span class="disclaimer-text">
+        <strong data-i18n="statutoryNoticeLabel">Statutory Notice:</strong> <span data-i18n="adminStatutoryNotice">Enforcement records, violation escalation logs, and statutory legal configurations under the Legal Metrology Act, 2009.</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="container main-content">
+
+    <!-- 1. OFFICER LOGIN GATE (Shown when not authenticated) -->
+    <div id="adminLoginSection" class="admin-login-wrapper">
+      <div class="card admin-login-card">
+        <div class="admin-login-header">
+          <div class="admin-login-seal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <circle cx="12" cy="11" r="3"/>
+              <path d="M12 14v3"/>
+            </svg>
+          </div>
+          <h2 class="admin-login-title" data-i18n="adminLoginTitle">Officer Authentication Portal</h2>
+          <p class="admin-login-desc" data-i18n="adminLoginDesc">Restricted enforcement terminal. Authorized Legal Metrology Officers & State Controllers only.</p>
+        </div>
+
+        <form id="adminLoginForm" class="admin-login-form">
+          <div class="form-group">
+            <label for="adminEmail" data-i18n="lblAdminEmail">Official Officer Email:</label>
+            <input type="email" id="adminEmail" class="form-input" placeholder="officer@metrasetu.gov.in" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="adminPassword" data-i18n="lblAdminPassword">Security Passcode:</label>
+            <input type="password" id="adminPassword" class="form-input" placeholder="••••••••••••" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="btnAdminLoginSubmit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            <span data-i18n="btnSignInConsole">Sign In to Compliance Console</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 2. AUTHENTICATED ADMIN CONSOLE (Shown when authenticated) -->
+    <div id="adminConsoleSection" class="hidden">
+      <!-- Admin Title & Summary Section -->
+      <div class="dashboard-header-row">
+        <div>
+          <div class="officer-badge-bar">
+            <span class="officer-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <strong id="officerNameDisplay">Senior Metrology Officer</strong> &bull; <span id="officerRoleDisplay">State Controller</span>
+            </span>
+            <button type="button" class="btn-logout" id="btnLogoutAdmin" title="Sign Out">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span data-i18n="btnLogout">Sign Out</span>
+            </button>
+          </div>
+          <h2 class="section-title" data-i18n="adminHeaderTitle">Statutory Enforcement & Compliance Manager</h2>
+          <p class="section-subtitle" data-i18n="adminHeaderSubtitle">Monitor raised statutory non-compliance violations, update governing Legal Metrology laws, and issue regulatory gazette circulars.</p>
+        </div>
+        <div class="dashboard-actions">
+          <button type="button" class="btn btn-primary btn-sm" id="btnAddNewRule">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span data-i18n="btnAddRule">Add Statutory Rule</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnPublishAmd">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            <span data-i18n="btnPublishCircular">Publish Gazette Circular</span>
+          </button>
+        </div>
+      </div>
+
+    <!-- 3 Admin KPI Summary Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card metric-non-compliant">
+        <div class="metric-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="metric-body">
+          <span class="metric-label" data-i18n="adminKpiViolations">Violations Raised</span>
+          <span class="metric-value" id="kpiViolationCount">0</span>
+          <span class="metric-hint" data-i18n="adminKpiViolationsHint">Non-compliant & flagged packages</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="metric-body">
+          <span class="metric-label" data-i18n="adminKpiPending">Pending Action</span>
+          <span class="metric-value" id="kpiPendingCount">0</span>
+          <span class="metric-hint" data-i18n="adminKpiPendingHint">Awaiting officer notice / escalation</span>
+        </div>
+      </div>
+
+      <div class="metric-card metric-compliant">
+        <div class="metric-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="metric-body">
+          <span class="metric-label" data-i18n="adminKpiRules">Active Statutory Rules</span>
+          <span class="metric-value" id="kpiActiveRulesCount">8</span>
+          <span class="metric-hint" data-i18n="adminKpiRulesHint">Configured legal metrology standards</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Navigation Tabs -->
+    <div class="admin-tab-nav">
+      <button type="button" class="admin-tab-btn active" data-tab="tabViolations">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span data-i18n="tabViolationsTitle">Raised Violations Registry</span>
+      </button>
+      <button type="button" class="admin-tab-btn" data-tab="tabRules">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span data-i18n="tabRulesTitle">Statutory Rules & Laws Manager</span>
+      </button>
+      <button type="button" class="admin-tab-btn" data-tab="tabAmendments">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span data-i18n="tabAmendmentsTitle">Gazette Circulars & Law Updates</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: VIOLATIONS REGISTRY -->
+    <div id="tabViolations" class="admin-tab-content active">
+      <div class="card">
+        <div class="table-filter-bar">
+          <div class="search-input-box">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="violationSearchInput" placeholder="Search by Scan ID, violation type, or rule..." data-i18n-placeholder="searchViolationsPlaceholder">
+          </div>
+          <div class="status-filter-pills" id="violationStatusFilter">
+            <button type="button" class="btn-pill active" data-filter="ALL" data-i18n="filterAll">All</button>
+            <button type="button" class="btn-pill" data-filter="PENDING_REVIEW" data-i18n="filterPending">Pending Review</button>
+            <button type="button" class="btn-pill" data-filter="DRAFT_NOTICE" data-i18n="filterDraftNotice">Notice Drafted</button>
+            <button type="button" class="btn-pill" data-filter="ESCALATED_TO_OFFICER" data-i18n="filterEscalated">Escalated</button>
+            <button type="button" class="btn-pill" data-filter="RESOLVED" data-i18n="filterResolved">Resolved</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th data-i18n="colScanId">Scan Ref ID</th>
+                <th data-i18n="colTimestamp">Timestamp</th>
+                <th data-i18n="colViolation">Statutory Violation Type</th>
+                <th data-i18n="colSeverity">Severity</th>
+                <th data-i18n="colSection">Governing Section</th>
+                <th data-i18n="colActionStatus">Enforcement Status</th>
+                <th data-i18n="colActions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="violationsTableBody">
+              <tr>
+                <td colspan="7" class="loading-cell" data-i18n="loadingViolations">Loading raised violations registry...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: STATUTORY RULES & LAWS MANAGER -->
+    <div id="tabRules" class="admin-tab-content hidden">
+      <div class="rules-management-header">
+        <p class="rules-desc" data-i18n="rulesManagerDesc">Configure statutory legal standards, penalty brackets, and statutory rule descriptions evaluated during AI package screening.</p>
+      </div>
+      <div class="rules-grid" id="rulesGridContainer">
+        <!-- Injected dynamically via admin.js -->
+      </div>
+    </div>
+
+    <!-- TAB 3: GAZETTE CIRCULARS & AMENDMENTS -->
+    <div id="tabAmendments" class="admin-tab-content hidden">
+      <div class="card">
+        <div class="amendment-timeline-header">
+          <h3 data-i18n="amendmentsFeedTitle">Official Gazette Amendments & Circulars Feed</h3>
+          <p data-i18n="amendmentsFeedDesc">Published Legal Metrology regulatory updates, ministerial gazette notifications, and advisory standards for field officers.</p>
+        </div>
+        <div class="amendments-timeline" id="amendmentsTimeline">
+          <!-- Injected dynamically via admin.js -->
+        </div>
+      </div>
+    </div>
+
+    </div> <!-- Close #adminConsoleSection -->
+
+  </main>
+
+  <!-- MODAL: EDIT STATUTORY RULE -->
+  <div class="modal-backdrop hidden" id="modalEditRule">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalRuleTitle" data-i18n="modalEditRuleTitle">Edit Statutory Rule & Legal Parameter</h3>
+        <button type="button" class="modal-close-btn" id="btnCloseRuleModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditRule">
+          <input type="hidden" id="editRuleId">
+          <div class="form-group">
+            <label for="editRuleCode" data-i18n="lblRuleCode">Rule / Section Code:</label>
+            <input type="text" id="editRuleCode" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label for="editStatute" data-i18n="lblStatute">Governing Statute / Act:</label>
+            <input type="text" id="editStatute" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label for="editRuleName" data-i18n="lblRuleTitle">Rule Title:</label>
+            <input type="text" id="editRuleName" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label for="editDescription" data-i18n="lblDescription">Legal Requirement Description:</label>
+            <textarea id="editDescription" class="form-textarea" rows="3" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="editPenalty" data-i18n="lblPenalty">Prescribed Section Penalty / Compounding:</label>
+            <textarea id="editPenalty" class="form-textarea" rows="2" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="editGazetteRef" data-i18n="lblGazetteRef">Gazette Notification Reference:</label>
+            <input type="text" id="editGazetteRef" class="form-input">
+          </div>
+          <div class="form-group-row">
+            <label for="editIsActive" data-i18n="lblIsActive">Rule Enforcement Status:</label>
+            <select id="editIsActive" class="form-select">
+              <option value="true" data-i18n="optActive">Active & Enforced</option>
+              <option value="false" data-i18n="optInactive">Suspended / Advisory Only</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="btnCancelEditRule" data-i18n="btnCancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" data-i18n="btnSaveRule">Save Statutory Rule</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PUBLISH GAZETTE AMENDMENT -->
+  <div class="modal-backdrop hidden" id="modalPublishAmd">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 data-i18n="modalPublishAmdTitle">Publish Official Gazette Notification</h3>
+        <button type="button" class="modal-close-btn" id="btnCloseAmdModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formPublishAmd">
+          <div class="form-group">
+            <label for="amdNotifNo" data-i18n="lblNotifNo">Gazette Notification / Circular No:</label>
+            <input type="text" id="amdNotifNo" class="form-input" placeholder="e.g. G.S.R. 240(E)" required>
+          </div>
+          <div class="form-group">
+            <label for="amdDate" data-i18n="lblGazetteDate">Notification Date:</label>
+            <input type="date" id="amdDate" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label for="amdTitle" data-i18n="lblAmdTitle">Notification Title:</label>
+            <input type="text" id="amdTitle" class="form-input" placeholder="e.g. Legal Metrology (Packaged Commodities) Amendment" required>
+          </div>
+          <div class="form-group">
+            <label for="amdSummary" data-i18n="lblAmdSummary">Summary of Regulatory Update:</label>
+            <textarea id="amdSummary" class="form-textarea" rows="3" placeholder="Summary of changes..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="amdAuthority" data-i18n="lblAuthority">Issuing Authority:</label>
+            <input type="text" id="amdAuthority" class="form-input" value="Department of Consumer Affairs, New Delhi" required>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="btnCancelAmd" data-i18n="btnCancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" data-i18n="btnPublish">Publish Gazette Circular</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <div class="container footer-content">
+      <p data-i18n="footerCopy">Legal Metrology (Packaged Commodities) Rules, 2011 &bull; Smart India Hackathon PS-26034</p>
+      <p class="footer-disclaimer" data-i18n="footerLegal">Designed for pre-inspection screening assistance &bull; Ministry of Consumer Affairs, Food &amp; Public Distribution</p>
+    </div>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="/static/i18n.js?v=2.5"></script>
+  <script src="/static/chatbot.js?v=2.5"></script>
+  <script src="/static/admin.js?v=2.5"></script>
+</body>
+</html>
