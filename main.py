@@ -34,6 +34,26 @@ app.add_middleware(
 )
 
 
+@app.on_event("startup")
+async def startup_warmup():
+    """
+    Pre-warm PaddleOCR engine on server boot to eliminate first-request latency.
+    """
+    logger.info("Pre-warming PaddleOCR engine on server startup...")
+    try:
+        from app.engine.ocr import get_ocr_engine
+        import numpy as np
+        engine = get_ocr_engine()
+        dummy = np.zeros((100, 100, 3), dtype=np.uint8)
+        try:
+            engine.ocr(dummy, cls=True)
+        except Exception:
+            engine.ocr(dummy)
+        logger.info("PaddleOCR engine pre-warmed successfully.")
+    except Exception as e:
+        logger.warning(f"PaddleOCR startup warmup notice: {e}")
+
+
 @app.post("/api/scan", response_model=ComplianceReport)
 async def scan_label(file: UploadFile = File(...)):
     """
