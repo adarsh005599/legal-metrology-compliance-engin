@@ -59,6 +59,19 @@ async def startup_warmup():
     asyncio.create_task(asyncio.to_thread(_warmup_paddle_worker))
 
 
+@app.get("/health")
+@app.get("/api/health")
+async def health_check():
+    """
+    Fast health check endpoint for Railway, Render, Fly.io, and container probes.
+    """
+    return {
+        "status": "healthy",
+        "service": "MetraSetu",
+        "timestamp": datetime.now().isoformat()
+    }
+
+
 @app.post("/api/scan", response_model=ComplianceReport)
 async def scan_label(file: UploadFile = File(...)):
     """

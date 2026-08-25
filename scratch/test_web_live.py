@@ -41,6 +41,16 @@ def run_tests():
 
     results = []
 
+    # 0. Test Health Check Endpoints (Railway/Container probes)
+    res, body = test_endpoint("Health Check API (/health)", "GET", "/health")
+    results.append(("Health Check /health", res))
+    if res:
+        health_data = json.loads(body.decode('utf-8'))
+        assert health_data.get('status') == 'healthy'
+
+    res, body = test_endpoint("Health Check API (/api/health)", "GET", "/api/health")
+    results.append(("Health Check /api/health", res))
+
     # 1. Test Static Pages
     res, body = test_endpoint("Home Scanner Page", "GET", "/")
     results.append(("Home Page", res))
