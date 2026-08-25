@@ -70,6 +70,9 @@ def run_tests():
     res, _ = test_endpoint("Dashboard JS", "GET", "/static/dashboard.js")
     results.append(("dashboard.js", res))
 
+    res, _ = test_endpoint("Local Chart.js Bundle", "GET", "/static/chart.umd.min.js")
+    results.append(("chart.umd.min.js", res))
+
     # 3. Test Telemetry API Endpoints
     res, body = test_endpoint("Scans Summary API", "GET", "/api/scans/summary")
     results.append(("API: /api/scans/summary", res))
