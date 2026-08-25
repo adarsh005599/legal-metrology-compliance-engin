@@ -34,24 +34,29 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-async def startup_warmup():
-    """
-    Pre-warm PaddleOCR engine on server boot to eliminate first-request latency.
-    """
-    logger.info("Pre-warming PaddleOCR engine on server startup...")
+import asyncio
+
+def _warmup_paddle_worker():
     try:
         from app.engine.ocr import get_ocr_engine
         import numpy as np
+        logger.info("Background thread: Warming PaddleOCR engine...")
         engine = get_ocr_engine()
-        dummy = np.zeros((100, 100, 3), dtype=np.uint8)
+        dummy = np.zeros((64, 64, 3), dtype=np.uint8)
         try:
             engine.ocr(dummy, cls=True)
         except Exception:
             engine.ocr(dummy)
-        logger.info("PaddleOCR engine pre-warmed successfully.")
+        logger.info("Background thread: PaddleOCR engine ready.")
     except Exception as e:
-        logger.warning(f"PaddleOCR startup warmup notice: {e}")
+        logger.warning(f"PaddleOCR background warmup note: {e}")
+
+@app.on_event("startup")
+async def startup_warmup():
+    """
+    Non-blocking startup: warm up PaddleOCR in a background thread.
+    """
+    asyncio.create_task(asyncio.to_thread(_warmup_paddle_worker))
 
 
 @app.post("/api/scan", response_model=ComplianceReport)
