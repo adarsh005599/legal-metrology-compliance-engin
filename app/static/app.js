@@ -502,24 +502,31 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  function getFieldI18nNames(rawName) {
-    const n = (rawName || '').toLowerCase();
-    if (n.includes('mrp') || n.includes('retail price')) {
-      return { name: t('fieldMrpName', rawName), rule: t('fieldMrpRule', 'Rule 6(1)(e)') };
+  function getFieldI18nNames(fieldOrName) {
+    const raw = typeof fieldOrName === 'object' ? (fieldOrName.field_id || fieldOrName.field_name || '') : (fieldOrName || '');
+    const fid = (typeof fieldOrName === 'object' && fieldOrName.field_id) ? fieldOrName.field_id.toLowerCase() : raw.toLowerCase();
+    
+    // 1. MRP
+    if (fid === 'mrp' || fid.includes('mrp') || fid.includes('retail price')) {
+      return { name: t('fieldMrpName', 'Maximum Retail Price (MRP)'), rule: t('fieldMrpRule', 'Rule 6(1)(e) — Price declaration including all taxes') };
     }
-    if (n.includes('quantity') || n.includes('net')) {
-      return { name: t('fieldNetQtyName', rawName), rule: t('fieldNetQtyRule', 'Rule 6(1)(b)') };
+    // 2. Net Quantity
+    if (fid === 'net_quantity' || fid.includes('quantity') || fid.includes('net')) {
+      return { name: t('fieldNetQtyName', 'Net Quantity'), rule: t('fieldNetQtyRule', 'Rule 6(1)(b) — Standard SI units (g, kg, ml, l)') };
     }
-    if (n.includes('date') || n.includes('mfg') || n.includes('manufacture')) {
-      return { name: t('fieldMfgDateName', rawName), rule: t('fieldMfgDateRule', 'Rule 6(1)(d)') };
+    // 3. Manufacturer / Packer Address (Checked before date to avoid 'manufacture' keyword overlap)
+    if (fid === 'address' || fid === 'manufacturer_address' || fid.includes('address') || fid.includes('packer') || fid.includes('importer') || (fid.includes('manufacturer') && !fid.includes('date'))) {
+      return { name: t('fieldMfgAddressName', 'Manufacturer / Packer Name & Address'), rule: t('fieldMfgAddressRule', 'Rule 6(1)(a) — Complete identification & address') };
     }
-    if (n.includes('address') || n.includes('packer') || n.includes('manufacturer')) {
-      return { name: t('fieldMfgAddressName', rawName), rule: t('fieldMfgAddressRule', 'Rule 6(1)(a)') };
+    // 4. Date of Manufacture / Packing
+    if (fid === 'mfg_date' || fid.includes('date') || fid.includes('mfg') || fid.includes('packing') || fid.includes('pkd')) {
+      return { name: t('fieldMfgDateName', 'Date of Manufacture / Packing'), rule: t('fieldMfgDateRule', 'Rule 6(1)(d) — Month & Year of packing') };
     }
-    if (n.includes('consumer') || n.includes('care') || n.includes('contact')) {
-      return { name: t('fieldConsumerCareName', rawName), rule: t('fieldConsumerCareRule', 'Rule 6(1)(f)') };
+    // 5. Consumer Care Details
+    if (fid === 'consumer_care' || fid.includes('consumer') || fid.includes('care') || fid.includes('contact') || fid.includes('helpline')) {
+      return { name: t('fieldConsumerCareName', 'Consumer Care Contact Details'), rule: t('fieldConsumerCareRule', 'Rule 6(1)(f) — Name, address, phone or email') };
     }
-    return { name: rawName, rule: 'Rule 6' };
+    return { name: raw, rule: 'Rule 6' };
   }
 
   function translateFinding(flagText) {
@@ -589,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const translatedDetails = translateFinding(field.details) || field.details;
       const detailsHtml = `<div class="field-desc-text"><strong>${t('explanationLabel', 'Explanation / Guidance:')}</strong> ${escapeHtml(translatedDetails)}</div>`;
 
-      const { name: i18nFieldName, rule: i18nFieldRule } = getFieldI18nNames(field.field_name);
+      const { name: i18nFieldName, rule: i18nFieldRule } = getFieldI18nNames(field);
 
       card.innerHTML = `
         <div class="field-name-block">

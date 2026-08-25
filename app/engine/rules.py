@@ -347,18 +347,20 @@ def check_net_quantity(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> Ru
 def check_mfg_date(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> RuleResult:
     """
     Field 3: Month & Year of Manufacture / Packing - Rule 6(1)(d)
+    Extensively hardened for real-world camera scans, snack packaging, lot/batch stamps.
     """
     lines, confidences = _extract_text_and_confidences(text_or_ocr_lines)
 
     months_str = r"(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"
-    date_regex = rf"(?:(?:0?[1-9]|[12][0-9]|3[01])[\/\.-])?(?:(?:0?[1-9]|1[0-2])|{months_str})[\/\.\s,-]+(?:20[2-9][0-9]|[2-9][0-9])"
-    mfg_kw = r"(?:mfg\s*dt\.?|mfg\.?|mfd\.?|manufactur(?:ed|ing)|pkd\.?|packed(?:\s*on)?|pack(?:ing)?|pkg|date\s*of\s*(?:mfg|mfd|pkd|packing|manufacture))"
-    
+    date_regex = rf"(?:(?:0?[1-9]|[12][0-9]|3[01])[\/\.\s-]*)?(?:(?:0?[1-9]|1[0-2])|{months_str})[\/\.\s,-]+(?:20[2-9][0-9]|[2-9][0-9])"
+    mfg_kw = r"(?:mfg\s*dt\.?|mfg\.?|mfd\.?|manufactur(?:ed|ing|e)?|pkd\.?|packed(?:\s*on)?|pack(?:ing)?|pkg|date\s*of\s*(?:mfg|mfd|pkd|packing|manufacture)|d\.?o\.?m\.?|d\.?o\.?p\.?|dom|dop|batch(?:\s*no\.?|\s*dt\.?)?|lot(?:\s*no\.?|\s*dt\.?)?|b\.?\s*no\.?|best\s*before|use\s*by|exp(?:iry)?(?:\s*date)?)"
+
     mfg_pattern = re.compile(
         rf"(?:{mfg_kw})\s*[:\.\s-]*({date_regex})",
         re.IGNORECASE
     )
 
+    # 1. Direct regex match on line
     for idx, line in enumerate(lines):
         if is_nutrition_or_ingredient_line(line):
             continue
@@ -402,30 +404,62 @@ def check_mfg_date(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> RuleRe
                     details=details
                 )
 
-    for idx in range(len(lines) - 1):
+    # 2. Multi-line window search (line i, line i+1, line i+2)
+    for idx in range(len(lines)):
         curr_line = lines[idx].strip()
-        next_line = lines[idx + 1].strip()
-        if is_nutrition_or_ingredient_line(curr_line) or is_nutrition_or_ingredient_line(next_line):
+        if is_nutrition_or_ingredient_line(curr_line):
             continue
-        if re.search(rf"\b{mfg_kw}[:\s-]*$", curr_line, re.IGNORECASE):
-            d_match = re.search(rf"^{date_regex}\b", next_line, re.IGNORECASE)
-            if d_match:
-                combined = f"{curr_line} {next_line}"
-                conf_val = min(c for c in [confidences[idx], confidences[idx+1]] if c is not None) if any(c is not None for c in [confidences[idx], confidences[idx+1]]) else None
-                base_status = "PASS"
-                default_details = f"Manufacture/Packing date declaration detected: '{combined}'."
-                status, conf_score, details, conf_flag = _check_confidence_status(conf_val, base_status, default_details)
-                return RuleResult(
-                    field_id="mfg_date",
-                    field_name="Month & Year of Manufacture / Packing",
-                    rule_reference="Rule 6(1)(d), Legal Metrology (Packaged Commodities) Rules, 2011",
-                    status=status,
-                    found=True,
-                    matched_text=combined,
-                    confidence_score=conf_score,
-                    flag=conf_flag,
-                    details=details
-                )
+        if re.search(rf"\b{mfg_kw}\b", curr_line, re.IGNORECASE):
+            for offset in [1, 2]:
+                if idx + offset < len(lines):
+                    next_line = lines[idx + offset].strip()
+                    if is_nutrition_or_ingredient_line(next_line):
+                        continue
+                    d_match = re.search(rf"\b{date_regex}\b", next_line, re.IGNORECASE)
+                    if d_match:
+                        combined = f"{curr_line} {next_line}"
+                        valid_confs = [c for c in [confidences[idx], confidences[idx + offset]] if c is not None]
+                        conf_val = min(valid_confs) if valid_confs else None
+                        base_status = "PASS"
+                        default_details = f"Manufacture/Packing date declaration detected: '{combined}'."
+                        status, conf_score, details, conf_flag = _check_confidence_status(conf_val, base_status, default_details)
+                        return RuleResult(
+                            field_id="mfg_date",
+                            field_name="Month & Year of Manufacture / Packing",
+                            rule_reference="Rule 6(1)(d), Legal Metrology (Packaged Commodities) Rules, 2011",
+                            status=status,
+                            found=True,
+                            matched_text=combined,
+                            confidence_score=conf_score,
+                            flag=conf_flag,
+                            details=details
+                        )
+
+    # 3. Standalone date pattern search across entire packaging label (outside nutrition panel)
+    standalone_date_pattern = re.compile(rf"\b({date_regex})\b", re.IGNORECASE)
+    for idx, line in enumerate(lines):
+        if is_nutrition_or_ingredient_line(line):
+            continue
+        if re.search(r"(\+91|1800|₹|Rs\.)", line, re.IGNORECASE):
+            continue
+        m = standalone_date_pattern.search(line)
+        if m:
+            matched_text = line.strip()
+            conf = confidences[idx]
+            base_status = "PASS"
+            default_details = f"Packaging date stamp detected: '{matched_text}'."
+            status, conf_score, details, conf_flag = _check_confidence_status(conf, base_status, default_details)
+            return RuleResult(
+                field_id="mfg_date",
+                field_name="Month & Year of Manufacture / Packing",
+                rule_reference="Rule 6(1)(d), Legal Metrology (Packaged Commodities) Rules, 2011",
+                status=status,
+                found=True,
+                matched_text=matched_text,
+                confidence_score=conf_score,
+                flag=conf_flag,
+                details=details
+            )
 
     return RuleResult(
         field_id="mfg_date",

@@ -131,13 +131,49 @@ def _call_nvidia_vision(image_bytes: bytes) -> dict:
     return parsed
 
 
+from PIL import Image, ImageOps, ImageEnhance
+
+def _preprocess_image_for_ocr(image: Image.Image) -> Image.Image:
+    """
+    Preprocesses product packaging images (especially phone camera captures):
+    1. Corrects EXIF rotation orientation.
+    2. Clamps maximum dimension to 1600px with high-fidelity Lanczos resampling.
+    3. Slightly enhances contrast and sharpness to resolve faint ink-jet printed batch dates and MRPs.
+    """
+    # 1. Fix mobile camera orientation
+    try:
+        image = ImageOps.exif_transpose(image)
+    except Exception:
+        pass
+
+    # 2. Rescale large camera photos to optimal OCR inference size
+    MAX_DIM = 1600
+    if max(image.size) > MAX_DIM:
+        resample_filter = getattr(Image, 'Resampling', Image).LANCZOS
+        image.thumbnail((MAX_DIM, MAX_DIM), resample_filter)
+
+    # 3. Enhance contrast and sharpness for packaging text / reflective foil
+    try:
+        contrast_enhancer = ImageEnhance.Contrast(image)
+        image = contrast_enhancer.enhance(1.2)
+        sharpness_enhancer = ImageEnhance.Sharpness(image)
+        image = sharpness_enhancer.enhance(1.25)
+    except Exception:
+        pass
+
+    return image
+
+
 def _extract_with_paddle(image: Image.Image) -> Tuple[List[OCRLine], List[str]]:
     """Runs PaddleOCR on a PIL image and extracts text lines and bounding boxes."""
     engine = get_ocr_engine()
     if engine is None:
         raise RuntimeError("PaddleOCR engine not initialized.")
 
-    img_np = np.array(image)
+    # Preprocess image
+    processed_img = _preprocess_image_for_ocr(image)
+    img_np = np.array(processed_img)
+
     result = None
     try:
         result = engine.ocr(img_np, cls=True)
