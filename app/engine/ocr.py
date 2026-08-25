@@ -1,102 +1,173 @@
 import io
 import os
+import re
+import json
+import base64
 import logging
-
-os.environ["PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK"] = "True"
 from typing import List, Tuple, Optional
 from PIL import Image
-import numpy as np
-from app.models import OCRLine
+from openai import OpenAI
+
+from app.models import OCRLine, LayoutRegion
 
 logger = logging.getLogger("compliance_engine.ocr")
 
-_ocr_engine = None
+# NVIDIA NIM API Configuration
+NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
+NVIDIA_VISION_MODEL = "meta/llama-3.2-90b-vision-instruct"
 
-def get_ocr_engine():
-    """
-    Lazy initialization of PaddleOCR engine with angle classification and English language.
-    """
-    global _ocr_engine
-    if _ocr_engine is None:
-        try:
-            from paddleocr import PaddleOCR
-            logger.info("Initializing PaddleOCR (use_angle_cls=True, lang='en')...")
-            _ocr_engine = PaddleOCR(use_angle_cls=True, lang='en')
-            logger.info("PaddleOCR initialized successfully.")
-        except Exception as e:
-            logger.error(f"Error initializing PaddleOCR: {e}")
-            raise e
-    return _ocr_engine
+def _get_nvidia_client() -> OpenAI:
+    """Create an OpenAI-compatible client pointing at NVIDIA NIM."""
+    api_key = os.environ.get("NVIDIA_API_KEY")
+    if not api_key:
+        raise ValueError(
+            "NVIDIA_API_KEY environment variable is not set. "
+            "Please set it in your .env file."
+        )
+    return OpenAI(base_url=NVIDIA_BASE_URL, api_key=api_key)
+
+
+def _image_to_base64(image_bytes: bytes) -> str:
+    """Convert raw image bytes to a base64-encoded data URI for the vision API."""
+    return base64.b64encode(image_bytes).decode("utf-8")
+
+
+EXTRACTION_PROMPT = """You are an OCR engine for product labels. Analyze this image carefully.
+
+TASK 1 — TEXT EXTRACTION:
+Extract every single line of visible text from this product/packaging label image, exactly as it appears. Do NOT paraphrase or summarize.
+
+TASK 2 — LAYOUT REGIONS:
+Identify major layout sections on the label (e.g. "title", "nutritional_info", "ingredients", "manufacturer_info", "barcode", "table", "figure").
+
+Return your answer as valid JSON with this exact structure (no markdown, no code fences):
+{
+  "lines": [
+    {"text": "exact text of line 1"},
+    {"text": "exact text of line 2"}
+  ],
+  "regions": [
+    {"region_type": "title", "text": "Brand Name XYZ"},
+    {"region_type": "nutritional_info", "text": "Energy 100kcal Protein 5g..."}
+  ]
+}
+
+RULES:
+- Return ONLY the JSON object, nothing else.
+- Do not wrap in markdown code fences.
+- Extract ALL text, including small print, legal declarations, weights, prices, dates, addresses.
+- For regions, combine text within each region into a single string."""
+
+
+def _call_nvidia_vision(image_bytes: bytes) -> dict:
+    """Send image to NVIDIA NIM vision model and parse the JSON response."""
+    client = _get_nvidia_client()
+    b64_image = _image_to_base64(image_bytes)
+
+    response = client.chat.completions.create(
+        model=NVIDIA_VISION_MODEL,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": EXTRACTION_PROMPT,
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{b64_image}",
+                        },
+                    },
+                ],
+            }
+        ],
+        max_tokens=4096,
+        temperature=0.0,
+    )
+
+    raw_text = response.choices[0].message.content.strip()
+
+    # Strip markdown code fences if the model wraps its output
+    raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
+    raw_text = re.sub(r"\s*```$", "", raw_text)
+
+    try:
+        parsed = json.loads(raw_text)
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse NVIDIA response as JSON: {e}\nRaw: {raw_text[:500]}")
+        # Fallback: treat entire response as a single text line
+        parsed = {
+            "lines": [{"text": line.strip()} for line in raw_text.splitlines() if line.strip()],
+            "regions": [],
+        }
+
+    return parsed
+
+
+# ---------------------------------------------------------------------------
+# Cache: avoid calling the API twice per upload (extract_text + analyze_layout)
+# ---------------------------------------------------------------------------
+_last_scan_cache: dict = {}
 
 
 def extract_text_from_bytes(image_bytes: bytes) -> Tuple[List[OCRLine], List[str]]:
     """
-    Extracts text lines and confidence scores from raw image bytes using PaddleOCR.
-    Handles multiple PaddleOCR API versions seamlessly (v2.x, v3.x).
-    Optimizes large high-res images to max 1280px for fast CPU inference.
+    Extracts text lines from raw image bytes using NVIDIA NIM Vision API.
+    Returns (list of OCRLine, list of raw text strings).
     """
     try:
-        # Load image with PIL and convert to RGB numpy array
-        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        
-        # Optimize dimensions for fast CPU inference (e.g. Render / HF / Cloud)
-        MAX_DIM = 1280
-        if max(image.size) > MAX_DIM:
-            resample_filter = getattr(Image, 'Resampling', Image).LANCZOS
-            image.thumbnail((MAX_DIM, MAX_DIM), resample_filter)
-            
-        img_np = np.array(image)
+        Image.open(io.BytesIO(image_bytes)).convert("RGB")
     except Exception as e:
         logger.error(f"Failed to decode image bytes: {e}")
         raise ValueError(f"Invalid image format: {e}")
 
-    engine = get_ocr_engine()
-    
-    # Run PaddleOCR with multi-version fallback (cls=True vs direct call)
-    result = None
-    try:
-        try:
-            result = engine.ocr(img_np, cls=True)
-        except (TypeError, Exception) as call_err:
-            if "cls" in str(call_err) or isinstance(call_err, TypeError):
-                result = engine.ocr(img_np)
-            else:
-                raise call_err
-    except Exception as e:
-        logger.error(f"PaddleOCR execution failed: {e}")
-        raise RuntimeError(f"OCR processing failed: {e}")
+    parsed = _call_nvidia_vision(image_bytes)
+
+    # Store in cache for analyze_layout_from_bytes
+    _last_scan_cache["parsed"] = parsed
 
     ocr_lines: List[OCRLine] = []
     text_lines: List[str] = []
 
-    if result and len(result) > 0 and result[0] is not None:
-        lines_data = result[0] if isinstance(result[0], list) else result
-        for item in lines_data:
-            try:
-                if isinstance(item, (list, tuple)) and len(item) >= 2:
-                    bbox = item[0] if isinstance(item[0], list) else None
-                    if isinstance(item[1], (tuple, list)) and len(item[1]) >= 2:
-                        text_content = str(item[1][0]).strip()
-                        confidence = float(item[1][1])
-                    else:
-                        text_content = str(item[1]).strip()
-                        confidence = 0.95
-                elif isinstance(item, dict):
-                    text_content = str(item.get("text", "")).strip()
-                    confidence = float(item.get("confidence", item.get("score", 0.95)))
-                    bbox = item.get("bbox", None)
-                else:
-                    continue
-
-                if text_content:
-                    ocr_lines.append(OCRLine(
-                        text=text_content,
-                        confidence=confidence,
-                        bbox=bbox
-                    ))
-                    text_lines.append(text_content)
-            except (IndexError, TypeError, ValueError) as parse_err:
-                logger.warning(f"Skipping malformed OCR line result: {item}, error: {parse_err}")
-                continue
+    for item in parsed.get("lines", []):
+        text = item.get("text", "").strip()
+        if text:
+            ocr_lines.append(
+                OCRLine(
+                    text=text,
+                    confidence=1.0,
+                    bbox=None,
+                )
+            )
+            text_lines.append(text)
 
     return ocr_lines, text_lines
+
+
+def analyze_layout_from_bytes(image_bytes: bytes) -> List[LayoutRegion]:
+    """
+    Extracts structural layout blocks from cached NVIDIA response.
+    Falls back to a fresh API call if the cache is empty.
+    """
+    parsed = _last_scan_cache.get("parsed")
+
+    if not parsed:
+        logger.warning("Cache miss in analyze_layout_from_bytes. Calling NVIDIA again.")
+        parsed = _call_nvidia_vision(image_bytes)
+
+    regions: List[LayoutRegion] = []
+    for reg in parsed.get("regions", []):
+        regions.append(
+            LayoutRegion(
+                region_type=reg.get("region_type", "unknown"),
+                bbox=[],
+                text=reg.get("text", ""),
+            )
+        )
+
+    # Clear cache after use
+    _last_scan_cache.clear()
+
+    return regions

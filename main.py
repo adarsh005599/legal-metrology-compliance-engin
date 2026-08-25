@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 import uuid
 import logging
 from datetime import datetime
@@ -10,7 +13,7 @@ from fastapi.responses import Response, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.models import ComplianceReport, ExemptionResult, MANDATORY_DISCLAIMER
-from app.engine.ocr import extract_text_from_bytes
+from app.engine.ocr import extract_text_from_bytes, analyze_layout_from_bytes
 from app.engine.exemption import check_exemptions
 from app.engine.rules import evaluate_all_rules
 from app.engine.pdf_report import generate_pdf_report
@@ -89,9 +92,10 @@ async def scan_label(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to read upload: {str(e)}")
 
-    # 1. OCR Extraction
+    # 1. OCR & Layout Extraction
     try:
         ocr_lines, text_lines = extract_text_from_bytes(image_bytes)
+        layout_regions = analyze_layout_from_bytes(image_bytes)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"OCR engine failed to process image: {str(e)}")
 
@@ -112,6 +116,7 @@ async def scan_label(file: UploadFile = File(...)):
             overall_status="EXEMPT",
             fields=[],
             extracted_lines=ocr_lines,
+            layout_regions=layout_regions,
             raw_text=raw_text,
             disclaimer=MANDATORY_DISCLAIMER
         )
@@ -145,6 +150,7 @@ async def scan_label(file: UploadFile = File(...)):
         overall_status=overall_status,
         fields=fields,
         extracted_lines=ocr_lines,
+        layout_regions=layout_regions,
         raw_text=raw_text,
         disclaimer=MANDATORY_DISCLAIMER
     )

@@ -614,12 +614,206 @@ def check_consumer_care(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> R
 
 
 # ==============================================================================
+# FIELD 6: GENERIC NAME
+# ==============================================================================
+
+def check_generic_name(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> RuleResult:
+    lines, confidences = _extract_text_and_confidences(text_or_ocr_lines)
+    kw_pattern = r"(?:generic\s*name|common\s*name|commodity|product(?:\s*name)?)"
+    regex = re.compile(rf"(?:{kw_pattern})\s*[:\.\s-]*([a-zA-Z\s]{{3,50}})", re.IGNORECASE)
+    
+    for idx, line in enumerate(lines):
+        if is_nutrition_or_ingredient_line(line): continue
+        match = regex.search(line)
+        if match:
+            matched_text = match.group(0).strip()
+            conf = confidences[idx]
+            status, conf_score, details, conf_flag = _check_confidence_status(conf, "PASS", f"Generic name detected: '{matched_text}'.")
+            return RuleResult(
+                field_id="generic_name",
+                field_name="Generic / Common Name",
+                rule_reference="Rule 6(1)(b), Legal Metrology Rules",
+                status=status, found=True, matched_text=matched_text,
+                confidence_score=conf_score, flag=conf_flag, details=details
+            )
+            
+    return RuleResult(
+        field_id="generic_name", field_name="Generic / Common Name",
+        rule_reference="Rule 6(1)(b), Legal Metrology Rules",
+        status="FAIL", found=False, matched_text=None, confidence_score=None, flag=None,
+        details="No generic name or product commodity declaration found."
+    )
+
+# ==============================================================================
+# FIELD 7: COUNTRY OF ORIGIN
+# ==============================================================================
+
+def check_country_of_origin(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> RuleResult:
+    lines, confidences = _extract_text_and_confidences(text_or_ocr_lines)
+    kw_pattern = r"(?:country\s*of\s*origin|made\s*in|product\s*of|manufactured\s*in|produce\s*of)"
+    regex = re.compile(rf"(?:{kw_pattern})\s*[:\.\s-]*([a-zA-Z\s]{{3,30}})", re.IGNORECASE)
+    
+    is_imported = False
+    full_text = " ".join(lines).lower()
+    if re.search(r"\b(imported\s*by|importer|import|imported)\b", full_text):
+        is_imported = True
+
+    for idx, line in enumerate(lines):
+        if is_nutrition_or_ingredient_line(line): continue
+        match = regex.search(line)
+        if match:
+            matched_text = match.group(0).strip()
+            conf = confidences[idx]
+            status, conf_score, details, conf_flag = _check_confidence_status(conf, "PASS", f"Country of origin detected: '{matched_text}'.")
+            return RuleResult(
+                field_id="country_of_origin",
+                field_name="Country of Origin",
+                rule_reference="Rule 6(1)(a), Legal Metrology Rules",
+                status=status, found=True, matched_text=matched_text,
+                confidence_score=conf_score, flag=conf_flag, details=details
+            )
+            
+    if is_imported:
+        return RuleResult(
+            field_id="country_of_origin", field_name="Country of Origin",
+            rule_reference="Rule 6(1)(a), Legal Metrology Rules",
+            status="FAIL", found=False, matched_text=None, confidence_score=None, flag=None,
+            details="Product appears to be imported, but no country of origin declaration was found."
+        )
+    else:
+        return RuleResult(
+            field_id="country_of_origin", field_name="Country of Origin",
+            rule_reference="Rule 6(1)(a), Legal Metrology Rules",
+            status="PASS", found=False, matched_text=None, confidence_score=None, flag=None,
+            details="Product does not appear to be imported. Country of Origin check waived."
+        )
+
+# ==============================================================================
+# FIELD 8: UNIT SALE PRICE
+# ==============================================================================
+
+def check_unit_sale_price(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> RuleResult:
+    lines, confidences = _extract_text_and_confidences(text_or_ocr_lines)
+    kw_pattern = r"(?:usp|unit\s*sale\s*price|price\s*per)"
+    regex = re.compile(rf"(?:{kw_pattern})\s*[:\.\s-]*([0-9oO\.]+\s*(?:rs|₹|inr)?\s*(?:per|/)?\s*(?:g|kg|ml|l))", re.IGNORECASE)
+    
+    for idx, line in enumerate(lines):
+        if is_nutrition_or_ingredient_line(line): continue
+        match = regex.search(line)
+        if match:
+            matched_text = match.group(0).strip()
+            conf = confidences[idx]
+            status, conf_score, details, conf_flag = _check_confidence_status(conf, "PASS", f"Unit sale price detected: '{matched_text}'.")
+            return RuleResult(
+                field_id="unit_sale_price",
+                field_name="Unit Sale Price",
+                rule_reference="Rule 6(1)(e), Legal Metrology Rules",
+                status=status, found=True, matched_text=matched_text,
+                confidence_score=conf_score, flag=conf_flag, details=details
+            )
+            
+    return RuleResult(
+        field_id="unit_sale_price", field_name="Unit Sale Price",
+        rule_reference="Rule 6(1)(e), Legal Metrology Rules",
+        status="FAIL", found=False, matched_text=None, confidence_score=None, flag=None,
+        details="No Unit Sale Price (USP) declaration found."
+    )
+
+# ==============================================================================
+# FIELD 9: BEST BEFORE / USE BY
+# ==============================================================================
+
+def check_best_before(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> RuleResult:
+    lines, confidences = _extract_text_and_confidences(text_or_ocr_lines)
+    kw_pattern = r"(?:best\s*before|use\s*by|expiry(?: date)?|exp\s*date|exp\.?)"
+    date_regex = r"([0-9\/\.\s-]+(?:months|days|years)?(?:from.*)?|[0-9\/\.-]+)"
+    regex = re.compile(rf"(?:{kw_pattern})\s*[:\.\s-]*{date_regex}", re.IGNORECASE)
+    
+    for idx, line in enumerate(lines):
+        if is_nutrition_or_ingredient_line(line): continue
+        match = regex.search(line)
+        if match:
+            matched_text = match.group(0).strip()
+            conf = confidences[idx]
+            status, conf_score, details, conf_flag = _check_confidence_status(conf, "PASS", f"Best Before / Use By detected: '{matched_text}'.")
+            return RuleResult(
+                field_id="best_before",
+                field_name="Best Before / Use By Date",
+                rule_reference="Rule 6(1)(d), Legal Metrology Rules",
+                status=status, found=True, matched_text=matched_text,
+                confidence_score=conf_score, flag=conf_flag, details=details
+            )
+            
+    return RuleResult(
+        field_id="best_before", field_name="Best Before / Use By Date",
+        rule_reference="Rule 6(1)(d), Legal Metrology Rules",
+        status="FAIL", found=False, matched_text=None, confidence_score=None, flag=None,
+        details="No Best Before or Expiry date declaration found."
+    )
+
+
+# ==============================================================================
+# FIELD 10: FONT LEGIBILITY THRESHOLD
+# ==============================================================================
+
+def check_font_legibility(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> RuleResult:
+    """
+    Evaluates pixel height of bounding boxes to warn if text is suspiciously small (micro-print).
+    Assumes standard OCR line bbox format.
+    """
+    MIN_PIXEL_HEIGHT = 15
+    smallest_height = float('inf')
+    suspicious_lines = []
+    has_bboxes = False
+    
+    for item in text_or_ocr_lines:
+        if isinstance(item, OCRLine) and item.bbox and len(item.bbox) >= 4:
+            has_bboxes = True
+            try:
+                y_coords = [pt[1] for pt in item.bbox]
+                height = max(y_coords) - min(y_coords)
+                if height < smallest_height:
+                    smallest_height = height
+                if height < MIN_PIXEL_HEIGHT:
+                    suspicious_lines.append(item.text)
+            except Exception:
+                continue
+
+    if not has_bboxes:
+        return RuleResult(
+            field_id="font_legibility",
+            field_name="Font Height & Legibility",
+            rule_reference="Rule 7, Legal Metrology Rules",
+            status="UNCERTAIN", found=False, matched_text=None, confidence_score=None, flag=None,
+            details="No spatial bounding boxes provided; cannot evaluate font height."
+        )
+
+    if suspicious_lines:
+        return RuleResult(
+            field_id="font_legibility",
+            field_name="Font Height & Legibility",
+            rule_reference="Rule 7, Legal Metrology Rules",
+            status="WARNING", found=True, matched_text=" | ".join(suspicious_lines[:3]), confidence_score=None,
+            flag=f"Micro-print detected (<{MIN_PIXEL_HEIGHT}px height).",
+            details=f"Warning: {len(suspicious_lines)} text lines detected with font height under {MIN_PIXEL_HEIGHT}px. Ensure declarations meet statutory 1mm/2.5mm minimum height based on display panel area."
+        )
+
+    return RuleResult(
+        field_id="font_legibility",
+        field_name="Font Height & Legibility",
+        rule_reference="Rule 7, Legal Metrology Rules",
+        status="PASS", found=True, matched_text=None, confidence_score=None, flag=None,
+        details=f"All detected text lines appear sufficiently sized (smallest height: {int(smallest_height)}px)."
+    )
+
+
+# ==============================================================================
 # EVALUATE ALL RULES
 # ==============================================================================
 
 def evaluate_all_rules(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> List[RuleResult]:
     """
-    Evaluates all 5 mandatory Legal Metrology declarations under Rule 6.
+    Evaluates all mandatory Legal Metrology declarations.
     Returns list of RuleResult objects.
     """
     return [
@@ -627,5 +821,10 @@ def evaluate_all_rules(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> Li
         check_net_quantity(text_or_ocr_lines),
         check_mfg_date(text_or_ocr_lines),
         check_manufacturer_address(text_or_ocr_lines),
-        check_consumer_care(text_or_ocr_lines)
+        check_consumer_care(text_or_ocr_lines),
+        check_generic_name(text_or_ocr_lines),
+        check_country_of_origin(text_or_ocr_lines),
+        check_unit_sale_price(text_or_ocr_lines),
+        check_best_before(text_or_ocr_lines),
+        check_font_legibility(text_or_ocr_lines)
     ]

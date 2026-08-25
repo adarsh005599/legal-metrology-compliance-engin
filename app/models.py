@@ -8,6 +8,11 @@ class OCRLine(BaseModel):
     confidence: float
     bbox: Optional[List[List[float]]] = None
 
+class LayoutRegion(BaseModel):
+    region_type: str
+    bbox: List[float]
+    text: Optional[str] = None
+
 class RuleResult(BaseModel):
     field_id: str
     field_name: str
@@ -34,5 +39,6 @@ class ComplianceReport(BaseModel):
     overall_status: str = Field(description="COMPLIANT, NON_COMPLIANT, or EXEMPT")
     fields: List[RuleResult] = []
     extracted_lines: List[OCRLine] = []
+    layout_regions: List[LayoutRegion] = []
     raw_text: str = ""
     disclaimer: str = MANDATORY_DISCLAIMER
