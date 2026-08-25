@@ -19,7 +19,7 @@ from app.db.supabase_client import save_scan_record, get_scans_summary, get_rece
 logger = logging.getLogger("legal_metrology.api")
 
 app = FastAPI(
-    title="Legal Metrology Compliance-Assist Engine",
+    title="MetraSetu — Legal Metrology Compliance Assistant",
     description="Pre-inspection screening report API for packaged commodity compliance (Ministry of Consumer Affairs, Food & Public Distribution)",
     version="1.0.0"
 )

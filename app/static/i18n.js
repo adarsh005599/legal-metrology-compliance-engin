@@ -6,9 +6,11 @@
 const TRANSLATIONS = {
   en: {
     // Navigation & Header
+    brandMainTitle: "MetraSetu",
+    brandSubTitle: "Legal Metrology Compliance Assistant",
     ministryDept: "Ministry of Consumer Affairs • Legal Metrology Division",
     ministryDeptLong: "Ministry of Consumer Affairs, Food & Public Distribution • Pre-Inspection Screening Portal",
-    appTitle: "Legal Metrology Compliance-Assist Engine",
+    appTitle: "MetraSetu — Legal Metrology Compliance Assistant",
     navScanLabel: "Screen Label",
     navDashboard: "Screening Dashboard",
     navLabelScanner: "Label Scanner",
@@ -190,9 +192,11 @@ const TRANSLATIONS = {
 
   hi: {
     // Navigation & Header
+    brandMainTitle: "मेट्रासेतु (MetraSetu)",
+    brandSubTitle: "विधिक मापविज्ञान अनुपालन सहायक",
     ministryDept: "उपभोक्ता मामले मंत्रालय • विधिक मापविज्ञान प्रभाग",
     ministryDeptLong: "उपभोक्ता मामले, खाद्य एवं सार्वजनिक वितरण मंत्रालय • पूर्व-निरीक्षण स्क्रीनिंग पोर्टल",
-    appTitle: "विधिक मापविज्ञान अनुपालन-सहायक इंजन",
+    appTitle: "मेट्रासेतु — विधिक मापविज्ञान अनुपालन सहायक",
     navScanLabel: "लेबल स्कैन करें",
     navDashboard: "स्क्रीनिंग डैशबोर्ड",
     navLabelScanner: "लेबल स्कैनर",

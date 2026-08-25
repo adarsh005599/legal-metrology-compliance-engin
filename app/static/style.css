@@ -199,17 +199,37 @@ body.lang-hi .footer-content {
 .brand-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
-.brand-dept,
-.brand-subtitle {
+.brand-dept {
   font-family: var(--font-ui);
-  font-size: 0.75rem;
-  color: #A0ABBA;
-  letter-spacing: 0.03em;
+  font-size: 0.68rem;
+  color: #94A3B8;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   font-weight: 500;
+}
+
+.brand-main-title {
+  font-family: var(--font-ui);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
+  line-height: 1.15;
+  background: linear-gradient(135deg, #FFFFFF 70%, #F3D08A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-sub-title {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #CBD5E1;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
 }
 
 .brand-title {
@@ -219,6 +239,16 @@ body.lang-hi .footer-content {
   letter-spacing: -0.01em;
   color: #FFFFFF;
   line-height: 1.25;
+}
+
+body.lang-hi .brand-main-title {
+  font-size: 1.3rem;
+  font-family: var(--font-hindi);
+}
+
+body.lang-hi .brand-sub-title {
+  font-size: 0.82rem;
+  font-family: var(--font-hindi);
 }
 
 .header-nav,

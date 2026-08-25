@@ -123,7 +123,7 @@ def generate_pdf_report(report: ComplianceReport) -> bytes:
 
     # 1. Main Header & Ministry Branding
     story.append(Paragraph("Ministry of Consumer Affairs, Food & Public Distribution", ministry_style))
-    story.append(Paragraph("Legal Metrology Compliance-Assist Report", title_style))
+    story.append(Paragraph("<b>MetraSetu</b>: Legal Metrology Compliance Assistant", title_style))
     story.append(Paragraph("Pre-inspection screening report — not a statutory notice under the Legal Metrology Act, 2009", subheader_style))
     story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#CBD5E0"), spaceAfter=10))
 

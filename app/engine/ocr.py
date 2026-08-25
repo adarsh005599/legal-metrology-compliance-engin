@@ -33,10 +33,18 @@ def extract_text_from_bytes(image_bytes: bytes) -> Tuple[List[OCRLine], List[str
     """
     Extracts text lines and confidence scores from raw image bytes using PaddleOCR.
     Handles multiple PaddleOCR API versions seamlessly (v2.x, v3.x).
+    Optimizes large high-res images to max 1280px for fast CPU inference.
     """
     try:
         # Load image with PIL and convert to RGB numpy array
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        
+        # Optimize dimensions for fast CPU inference (e.g. Render / HF / Cloud)
+        MAX_DIM = 1280
+        if max(image.size) > MAX_DIM:
+            resample_filter = getattr(Image, 'Resampling', Image).LANCZOS
+            image.thumbnail((MAX_DIM, MAX_DIM), resample_filter)
+            
         img_np = np.array(image)
     except Exception as e:
         logger.error(f"Failed to decode image bytes: {e}")
