@@ -57,11 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentFacingMode = 'environment';
 
   // Auto-Scan State
-  let autoScanInterval = null;
+  let autoScanTimeout = null;
   let autoScanActive = false;
+  let isScanningFrame = false;
   let autoScanDebounceUntil = 0;
-  const AUTO_SCAN_INTERVAL_MS = 2200;   // Sample a frame every 2.2 seconds
-  const AUTO_SCAN_MIN_CHARS = 15;       // Minimum OCR text chars to trigger scan
+  const AUTO_SCAN_DELAY_MS = 1200;      // Sequential interval between completed frame scans
+  const AUTO_SCAN_MIN_CHARS = 8;        // Minimum OCR text chars to trigger automatic screening
   const AUTO_SCAN_DEBOUNCE_MS = 6000;   // Wait 6s after each successful scan
 
   const autoScanBadge = document.getElementById('autoScanBadge');
@@ -194,24 +195,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==============================================================================
-  // AUTO-SCAN ENGINE
+  // AUTO-SCAN ENGINE (Cloud & Mobile Optimized)
   // ==============================================================================
 
   function startAutoScan() {
-    if (autoScanInterval) clearInterval(autoScanInterval);
+    if (autoScanTimeout) clearTimeout(autoScanTimeout);
     autoScanActive = true;
+    isScanningFrame = false;
     setAutoScanBadge(true, 'Auto-Scanning…');
-    autoScanInterval = setInterval(autoScanTick, AUTO_SCAN_INTERVAL_MS);
+    scheduleNextAutoScan(600);
   }
 
   function stopAutoScan() {
     autoScanActive = false;
-    if (autoScanInterval) {
-      clearInterval(autoScanInterval);
-      autoScanInterval = null;
+    isScanningFrame = false;
+    if (autoScanTimeout) {
+      clearTimeout(autoScanTimeout);
+      autoScanTimeout = null;
     }
     setAutoScanBadge(false);
     if (cameraViewport) cameraViewport.classList.remove('auto-scanning');
+  }
+
+  function scheduleNextAutoScan(delayMs = AUTO_SCAN_DELAY_MS) {
+    if (!autoScanActive) return;
+    if (autoScanTimeout) clearTimeout(autoScanTimeout);
+    autoScanTimeout = setTimeout(autoScanTick, delayMs);
   }
 
   function setAutoScanBadge(visible, text) {
@@ -225,59 +234,89 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Auto-scan frame tick — called every AUTO_SCAN_INTERVAL_MS.
-   * 1. Checks debounce (skip if a scan was recently completed).
-   * 2. Captures current frame from the live video stream.
-   * 3. Checks frame brightness (reject if too dark/blank).
-   * 4. Sends frame to /api/scan backend.
-   * 5. If backend returns ≥ AUTO_SCAN_MIN_CHARS of extracted text, shows compliance results.
+   * Auto-scan frame tick — runs sequentially without server overloading.
+   * 1. Downsamples frame to max 720px for fast transmission & swift cloud OCR.
+   * 2. Checks frame brightness.
+   * 3. Sends frame to /api/scan backend.
+   * 4. Triggers instant compliance review if any product text or statutory declarations are detected.
    */
   async function autoScanTick() {
     if (!autoScanActive) return;
-    if (!cameraVideo || !cameraVideo.videoWidth || !cameraVideo.videoHeight) return;
-    if (Date.now() < autoScanDebounceUntil) return;
+    if (!cameraVideo || !cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+      scheduleNextAutoScan(800);
+      return;
+    }
+    if (Date.now() < autoScanDebounceUntil) {
+      scheduleNextAutoScan(1000);
+      return;
+    }
+    if (isScanningFrame) return; // Prevent concurrent requests
 
-    // Capture current frame
-    cameraCanvas.width = cameraVideo.videoWidth;
-    cameraCanvas.height = cameraVideo.videoHeight;
+    isScanningFrame = true;
+
+    // Downsample frame to max 720px for fast upload & inference on cloud servers
+    const maxDim = 720;
+    const srcW = cameraVideo.videoWidth || 640;
+    const srcH = cameraVideo.videoHeight || 480;
+    const scale = Math.min(1, maxDim / Math.max(srcW, srcH));
+    const targetW = Math.round(srcW * scale);
+    const targetH = Math.round(srcH * scale);
+
+    cameraCanvas.width = targetW;
+    cameraCanvas.height = targetH;
     const ctx = cameraCanvas.getContext('2d');
-    ctx.drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
+    ctx.drawImage(cameraVideo, 0, 0, targetW, targetH);
 
-    // Basic brightness check — skip very dark or uniform frames
-    const imageData = ctx.getImageData(0, 0, Math.min(cameraCanvas.width, 120), Math.min(cameraCanvas.height, 120));
+    // Basic brightness check — skip completely dark or blown-out frames
+    const sampleW = Math.min(targetW, 80);
+    const sampleH = Math.min(targetH, 80);
+    const imageData = ctx.getImageData(0, 0, sampleW, sampleH);
     const pixels = imageData.data;
     let brightness = 0;
     for (let i = 0; i < pixels.length; i += 4) {
       brightness += (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
     }
     brightness /= (pixels.length / 4);
-    if (brightness < 25 || brightness > 245) return; // Too dark or blown out
+
+    if (brightness < 18 || brightness > 248) {
+      setAutoScanBadge(true, 'Align product label…');
+      isScanningFrame = false;
+      scheduleNextAutoScan(800);
+      return;
+    }
 
     if (cameraViewport) cameraViewport.classList.add('auto-scanning');
     setAutoScanBadge(true, 'Detecting text…');
 
     try {
       const blob = await new Promise((resolve, reject) => {
-        cameraCanvas.toBlob(b => b ? resolve(b) : reject(new Error('Blob failed')), 'image/jpeg', 0.88);
+        cameraCanvas.toBlob(b => b ? resolve(b) : reject(new Error('Blob creation failed')), 'image/jpeg', 0.78);
       });
 
       const formData = new FormData();
       formData.append('file', new File([blob], `auto_scan_${Date.now()}.jpg`, { type: 'image/jpeg' }));
 
       const response = await fetch('/api/scan', { method: 'POST', body: formData });
-      if (!response.ok) return;
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
       const data = await response.json();
 
-      // Only show results if enough text was actually detected
-      const textLength = (data.raw_text || (data.extracted_lines || []).map(l => l.text).join(' ')).trim().length;
-      if (textLength < AUTO_SCAN_MIN_CHARS) {
-        setAutoScanBadge(true, 'No label detected…');
+      // Check if meaningful label text was detected
+      const rawText = (data.raw_text || (data.extracted_lines || []).map(l => l.text).join(' ')).trim();
+      const hasKeywords = /(?:MRP|Rs\.?|₹|Net|Wt|Weight|Mfg|Pkg|Pack|Date|Exp|Consumer|Care|Helpline|Best|Before|Batch|FSSAI|gm|kg|ml|\bltr?\b)/i.test(rawText);
+      const hasDetectedLabel = rawText.length >= AUTO_SCAN_MIN_CHARS || (data.extracted_lines && data.extracted_lines.length >= 1) || hasKeywords;
+
+      if (!hasDetectedLabel) {
+        setAutoScanBadge(true, 'Align product label…');
         if (cameraViewport) cameraViewport.classList.remove('auto-scanning');
+        isScanningFrame = false;
+        scheduleNextAutoScan(AUTO_SCAN_DELAY_MS);
         return;
       }
 
-      // ✅ Label detected — stop auto-scan, show result like a normal scan
+      // ✅ Label detected — stop auto-scan, transition to results
       stopAutoScan();
       stopCamera();
       cameraViewContainer.classList.add('hidden');
@@ -285,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnModeUpload.classList.add('active');
       btnModeCamera.classList.remove('active');
 
-      // Show captured frame as preview
+      // Show captured frame in preview box
       imagePreview.src = cameraCanvas.toDataURL('image/jpeg');
       dropzonePrompt.classList.add('hidden');
       previewContainer.classList.remove('hidden');
@@ -307,8 +346,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.warn('Auto-scan frame error:', err);
-      setAutoScanBadge(true, 'Auto-Scanning…');
+      setAutoScanBadge(true, 'Scanning…');
       if (cameraViewport) cameraViewport.classList.remove('auto-scanning');
+      isScanningFrame = false;
+      scheduleNextAutoScan(AUTO_SCAN_DELAY_MS);
     }
   }
 
