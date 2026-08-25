@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   btnCapturePhoto.addEventListener('click', () => {
-    if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+    if (!cameraVideo || !cameraVideo.videoWidth || !cameraVideo.videoHeight) {
       showToast(t('toastCameraError', 'Camera video stream is not ready yet'), 'warning');
       return;
     }
@@ -388,9 +388,19 @@ document.addEventListener('DOMContentLoaded', () => {
       btnModeCamera.classList.remove('active');
 
       handleFileSelection(capturedFile);
-      showToast(t('toastPhotoCaptured', 'Photo captured from camera'), 'success');
+      showToast(t('toastPhotoCaptured', 'Photo captured — analyzing compliance…'), 'info');
+      // Immediately run analysis so user doesn't have to click twice
+      startAnalysis();
     }, 'image/png');
   });
+
+  if (cameraViewport) {
+    cameraViewport.addEventListener('click', (e) => {
+      if (e.target === cameraVideo || e.target === cameraViewport) {
+        btnCapturePhoto.click();
+      }
+    });
+  }
 
 
   // ==============================================================================
