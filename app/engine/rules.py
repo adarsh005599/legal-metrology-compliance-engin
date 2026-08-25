@@ -694,8 +694,14 @@ def check_country_of_origin(text_or_ocr_lines: Union[List[str], List[OCRLine]]) 
 
 def check_unit_sale_price(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> RuleResult:
     lines, confidences = _extract_text_and_confidences(text_or_ocr_lines)
-    kw_pattern = r"(?:usp|unit\s*sale\s*price|price\s*per)"
-    regex = re.compile(rf"(?:{kw_pattern})\s*[:\.\s-]*([0-9oO\.]+\s*(?:rs|₹|inr)?\s*(?:per|/)?\s*(?:g|kg|ml|l))", re.IGNORECASE)
+    kw_pattern = r"(?:usp|unit\s*sale\s*price|price\s*per|unit\s*price)"
+    currency_pattern = r"(?:rs\.?|inr|₹)"
+    unit_pattern = r"(?:per|/)\s*(?:g|gm|gms|kg|kgs|ml|l|L|piece|item|unit)\b"
+    
+    regex = re.compile(
+        rf"(?:{kw_pattern})\s*[:\.\s-]*\s*(?:{currency_pattern}\s*)?([0-9oO]+(?:\.[0-9oO]+)?)\s*(?:{currency_pattern}\s*)?{unit_pattern}",
+        re.IGNORECASE
+    )
     
     for idx, line in enumerate(lines):
         if is_nutrition_or_ingredient_line(line): continue
@@ -718,6 +724,7 @@ def check_unit_sale_price(text_or_ocr_lines: Union[List[str], List[OCRLine]]) ->
         status="FAIL", found=False, matched_text=None, confidence_score=None, flag=None,
         details="No Unit Sale Price (USP) declaration found."
     )
+
 
 # ==============================================================================
 # FIELD 9: BEST BEFORE / USE BY
@@ -811,20 +818,32 @@ def check_font_legibility(text_or_ocr_lines: Union[List[str], List[OCRLine]]) ->
 # EVALUATE ALL RULES
 # ==============================================================================
 
-def evaluate_all_rules(text_or_ocr_lines: Union[List[str], List[OCRLine]]) -> List[RuleResult]:
+def evaluate_all_rules(text_or_ocr_lines: Union[List[str], List[OCRLine]], extended: bool = False) -> List[RuleResult]:
     """
-    Evaluates all mandatory Legal Metrology declarations.
-    Returns list of RuleResult objects.
+    Evaluates mandatory Legal Metrology declarations under Rule 6.
+    By default returns the 5 statutory mandatory declaration fields:
+    1. Maximum Retail Price (MRP) - Rule 6(1)(e)
+    2. Net Quantity - Rule 6(1)(b)
+    3. Month & Year of Manufacture / Packing - Rule 6(1)(d)
+    4. Name & Address of Manufacturer / Packer / Importer - Rule 6(1)(a)
+    5. Consumer Care Details - Rule 6(1)(f)
+
+    If extended=True, includes supplementary advisory declarations.
     """
-    return [
+    rules = [
         check_mrp(text_or_ocr_lines),
         check_net_quantity(text_or_ocr_lines),
         check_mfg_date(text_or_ocr_lines),
         check_manufacturer_address(text_or_ocr_lines),
-        check_consumer_care(text_or_ocr_lines),
-        check_generic_name(text_or_ocr_lines),
-        check_country_of_origin(text_or_ocr_lines),
-        check_unit_sale_price(text_or_ocr_lines),
-        check_best_before(text_or_ocr_lines),
-        check_font_legibility(text_or_ocr_lines)
+        check_consumer_care(text_or_ocr_lines)
     ]
+    if extended:
+        rules.extend([
+            check_generic_name(text_or_ocr_lines),
+            check_country_of_origin(text_or_ocr_lines),
+            check_unit_sale_price(text_or_ocr_lines),
+            check_best_before(text_or_ocr_lines),
+            check_font_legibility(text_or_ocr_lines)
+        ])
+    return rules
+

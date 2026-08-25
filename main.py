@@ -127,11 +127,11 @@ async def scan_label(file: UploadFile = File(...)):
         return report
 
     # 3. Rule Engine: 5 Mandatory Declaration Fields with OCR confidence auditing
-    fields = evaluate_all_rules(ocr_lines)
+    fields = evaluate_all_rules(ocr_lines, extended=True)
     
     # Overall status determination:
     has_failure = any(f.status == "FAIL" for f in fields)
-    has_warning = any(f.status == "WARNING" for f in fields)
+    has_warning = any(f.status in {"WARNING", "FLAGGED"} for f in fields)
     has_uncertain = any(f.status == "UNCERTAIN" for f in fields)
 
     if has_failure or has_warning:
@@ -200,9 +200,9 @@ async def scan_raw_text(payload: dict = Body(...)):
             logger.warning(f"Non-blocking DB write error: {db_err}")
         return report
 
-    fields = evaluate_all_rules(text_lines)
+    fields = evaluate_all_rules(text_lines, extended=True)
     has_failure = any(f.status == "FAIL" for f in fields)
-    has_warning = any(f.status == "WARNING" for f in fields)
+    has_warning = any(f.status in {"WARNING", "FLAGGED"} for f in fields)
     has_uncertain = any(f.status == "UNCERTAIN" for f in fields)
     
     if has_failure or has_warning:

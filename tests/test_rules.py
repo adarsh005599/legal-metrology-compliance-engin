@@ -7,6 +7,11 @@ from app.engine.rules import (
     check_mfg_date,
     check_manufacturer_address,
     check_consumer_care,
+    check_generic_name,
+    check_country_of_origin,
+    check_unit_sale_price,
+    check_best_before,
+    check_font_legibility,
     evaluate_all_rules,
     DUAL_MRP_REASON
 )
@@ -296,20 +301,59 @@ class TestLegalMetrologyRules(unittest.TestCase):
         self.assertEqual(len(fields), 5)
         self.assertTrue(all(f.status == "PASS" for f in fields))
 
-    def test_crunchy_bites_dual_mrp_flagged(self):
+    def test_extended_rules_evaluation(self):
         text = [
-            "CRUNCHY BITES",
-            "Net Wt: 200 g",
-            "MRP Rs.20 / MRPRs.25*",
-            "MFD: 09/2024",
-            "Manufactured by: Sweet Bakes Ltd, New Delhi 110020",
-            "Customer Care: 1800-111-2222"
+            "ORGANIC CASHEW NUTS",
+            "Generic Name: Cashew Kernels",
+            "Net Wt: 500 g",
+            "MRP Rs. 650.00 (Incl. of all taxes)",
+            "Unit Sale Price: Rs. 1.30 per g",
+            "MFD: 10/2024",
+            "Best Before: 12 months from packing",
+            "Country of Origin: India",
+            "Manufactured & Packed by: Green Agro Foods Pvt Ltd, Plot 42, GIDC, Ahmedabad 382330",
+            "Consumer Care Helpline: 1800-200-4567 | Email: care@greenagro.com"
         ]
-        fields = evaluate_all_rules(text)
-        mrp_field = next(f for f in fields if f.field_id == "mrp")
-        self.assertEqual(mrp_field.status, "FLAGGED")
-        self.assertIn("Dual pricing detected", mrp_field.flag)
+        fields = evaluate_all_rules(text, extended=True)
+        self.assertEqual(len(fields), 10)
+        core_fields = [f for f in fields if f.field_id in {"mrp", "net_quantity", "mfg_date", "address", "consumer_care"}]
+        self.assertTrue(all(f.status == "PASS" for f in core_fields))
+
+    def test_generic_name_check(self):
+        self.assertEqual(check_generic_name(["Generic Name: Wheat Flour"]).status, "PASS")
+        self.assertEqual(check_generic_name(["Common Name: Refined Oil"]).status, "PASS")
+        self.assertEqual(check_generic_name(["Snack Food"]).status, "FAIL")
+
+    def test_country_of_origin_check(self):
+        self.assertEqual(check_country_of_origin(["Country of Origin: India"]).status, "PASS")
+        self.assertEqual(check_country_of_origin(["Made in India"]).status, "PASS")
+        # Imported product without country of origin fails
+        self.assertEqual(check_country_of_origin(["Imported by: ABC Importers Ltd"]).status, "FAIL")
+        # Domestic product without import keyword waives country of origin
+        self.assertEqual(check_country_of_origin(["Manufactured by: Local Agro"]).status, "PASS")
+
+    def test_unit_sale_price_check(self):
+        self.assertEqual(check_unit_sale_price(["Unit Sale Price: Rs. 0.50 / g"]).status, "PASS")
+        self.assertEqual(check_unit_sale_price(["USP: Rs 20.00 / kg"]).status, "PASS")
+        self.assertEqual(check_unit_sale_price(["No unit price"]).status, "FAIL")
+
+    def test_best_before_check(self):
+        self.assertEqual(check_best_before(["Best Before 12 months from manufacture"]).status, "PASS")
+        self.assertEqual(check_best_before(["Use By: 12/2026"]).status, "PASS")
+        self.assertEqual(check_best_before(["Exp Date: 10/2026"]).status, "PASS")
+        self.assertEqual(check_best_before(["Only snack"]).status, "FAIL")
+
+    def test_font_legibility_check(self):
+        # Without bboxes returns UNCERTAIN
+        self.assertEqual(check_font_legibility(["Text only"]).status, "UNCERTAIN")
+        # With normal bboxes returns PASS
+        line_normal = OCRLine(text="Brand Name", confidence=0.95, bbox=[[0, 0], [100, 0], [100, 25], [0, 25]])
+        self.assertEqual(check_font_legibility([line_normal]).status, "PASS")
+        # With tiny bboxes returns WARNING
+        line_tiny = OCRLine(text="Tiny print", confidence=0.95, bbox=[[0, 0], [100, 0], [100, 8], [0, 8]])
+        self.assertEqual(check_font_legibility([line_tiny]).status, "WARNING")
 
 
 if __name__ == "__main__":
     unittest.main()
+

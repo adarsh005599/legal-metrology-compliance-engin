@@ -111,7 +111,7 @@ def run_batch_test(directory_path: str = "data/sample_labels", output_csv: str =
                     row["Consumer_Care_Conf"] = f"{int(f.confidence_score*100)}%" if f.confidence_score is not None else "-"
 
                 has_failure = any(f.status == "FAIL" for f in fields)
-                has_warning = any(f.status == "WARNING" for f in fields)
+                has_warning = any(f.status in {"WARNING", "FLAGGED"} for f in fields)
                 has_uncertain = any(f.status == "UNCERTAIN" for f in fields)
 
                 if has_failure or has_warning:

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 from pydantic import BaseModel, Field
 
 MANDATORY_DISCLAIMER = "This is a compliance-assist screening report, not a statutory notice under the Legal Metrology Act, 2009."
@@ -6,18 +6,18 @@ MANDATORY_DISCLAIMER = "This is a compliance-assist screening report, not a stat
 class OCRLine(BaseModel):
     text: str
     confidence: float
-    bbox: Optional[List[List[float]]] = None
+    bbox: Optional[List[Any]] = None
 
 class LayoutRegion(BaseModel):
     region_type: str
-    bbox: List[float]
+    bbox: Optional[List[Any]] = Field(default_factory=list)
     text: Optional[str] = None
 
 class RuleResult(BaseModel):
     field_id: str
     field_name: str
     rule_reference: str
-    status: str = Field(description="PASS, FAIL, WARNING, or UNCERTAIN")
+    status: str = Field(description="PASS, FAIL, WARNING, FLAGGED, or UNCERTAIN")
     found: bool
     matched_text: Optional[str] = None
     confidence_score: Optional[float] = None
@@ -36,7 +36,7 @@ class ComplianceReport(BaseModel):
     filename: Optional[str] = None
     is_exempt: bool
     exemption_details: Optional[ExemptionResult] = None
-    overall_status: str = Field(description="COMPLIANT, NON_COMPLIANT, or EXEMPT")
+    overall_status: str = Field(description="COMPLIANT, NON_COMPLIANT, EXEMPT, or UNCERTAIN")
     fields: List[RuleResult] = []
     extracted_lines: List[OCRLine] = []
     layout_regions: List[LayoutRegion] = []
