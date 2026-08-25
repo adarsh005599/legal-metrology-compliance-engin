@@ -644,6 +644,46 @@ body.lang-hi .brand-sub-title {
   border: 1px solid rgba(180, 131, 62, 0.4);
 }
 
+/* Auto-Scan Badge */
+.auto-scan-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(16, 29, 51, 0.92);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(52, 211, 153, 0.55);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #34D399;
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.25);
+}
+
+.auto-scan-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #34D399;
+  animation: autoScanPulse 1.4s infinite ease-in-out;
+  flex-shrink: 0;
+}
+
+@keyframes autoScanPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.75); }
+}
+
+/* Camera viewport scanning sweep animation */
+.camera-viewport.auto-scanning .camera-video {
+  outline: 2px solid rgba(52, 211, 153, 0.6);
+  outline-offset: -2px;
+}
+
 .camera-controls {
   display: flex;
   gap: 0.75rem;
