@@ -113,6 +113,33 @@
       "summary": "Testing administrative amendment publication API.",
       "authority": "Director (Legal Metrology), GoI",
       "status": "ENFORCED",
+      "id": "amd_1787715232"
+    },
+    {
+      "notification_no": "TEST-GSR-999(E)",
+      "gazette_date": "2026-08-26",
+      "title": "Test Gazette Advisory on Unit Metric Fonts",
+      "summary": "Testing administrative amendment publication API.",
+      "authority": "Director (Legal Metrology), GoI",
+      "status": "ENFORCED",
+      "id": "amd_1787714064"
+    },
+    {
+      "notification_no": "TEST-GSR-999(E)",
+      "gazette_date": "2026-08-26",
+      "title": "Test Gazette Advisory on Unit Metric Fonts",
+      "summary": "Testing administrative amendment publication API.",
+      "authority": "Director (Legal Metrology), GoI",
+      "status": "ENFORCED",
+      "id": "amd_1787701022"
+    },
+    {
+      "notification_no": "TEST-GSR-999(E)",
+      "gazette_date": "2026-08-26",
+      "title": "Test Gazette Advisory on Unit Metric Fonts",
+      "summary": "Testing administrative amendment publication API.",
+      "authority": "Director (Legal Metrology), GoI",
+      "status": "ENFORCED",
       "id": "amd_1787700823"
     },
     {
@@ -228,7 +255,7 @@
     "SCAN-TEST-001": {
       "status": "DRAFT_NOTICE",
       "officer_notes": "Statutory notice drafted for Rule 32 violation.",
-      "last_action_date": "2026-08-26 05:03:44"
+      "last_action_date": "2026-08-26 09:03:54"
     }
   }
 }
